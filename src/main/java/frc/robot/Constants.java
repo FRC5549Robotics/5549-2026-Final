@@ -187,9 +187,15 @@ public final class Constants {
     public static final int GROUND_INTAKE_ID = 23;
     public static final double GROUND_PIVOT_SPEED = 0.15;
 
+  //Belt Constants
+    public static final int Belt_MOTOR_ID = 14;
     //CanRange
     public static final int CANRANGE_ID = 20;
 
+
+    //Shooter constants
+    public static final int LEFT_MOTOR_ID = 15;
+    public static final int RIGHT_MOTOR_ID = 16;
     //CANdle
     public static final int CANDLE_ID = 19;
 } 

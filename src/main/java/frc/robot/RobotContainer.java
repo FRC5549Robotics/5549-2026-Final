@@ -41,6 +41,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.GroundIntake;
+import frc.robot.subsystems.InBelt;
+import frc.robot.subsystems.Shooter;
 
 public class RobotContainer {
 
@@ -64,13 +66,15 @@ public class RobotContainer {
 
     
     JoystickButton groundIntakeButton = new JoystickButton(m_controller2.getHID(), 6);
-
+    
 
     // private final Limelight m_limelight = new Limelight(m_drive, m_controller);
     // private final Intake m_intake = new Intake();
     // private final Shooter m_Shooter = new Shooter();
     // private final Belt m_Belt = new Belt();
     private final GroundIntake m_pivot = new GroundIntake();
+    private final InBelt m_belt = new InBelt();
+    private final Shooter m_shooter = new Shooter();
     // private final Candle m_leds = new Candle();
     
     //AUTOCHOOSER SET UP
@@ -237,7 +241,13 @@ public class RobotContainer {
         // groundIntakeButton.whileTrue(new InstantCommand(m_pivot :: pivotDown)).onFalse(new InstantCommand(m_pivot::off));
         m_controller2.axisLessThan(1, -0.7).onTrue(new InstantCommand(m_pivot::setPivotDown)).onFalse(new InstantCommand(m_pivot::off)); 
         m_controller2.axisGreaterThan(1, 0.7).onTrue(new InstantCommand(m_pivot::setPivotUp)).onFalse(Commands.parallel(new InstantCommand(m_pivot::off), new InstantCommand(m_pivot::IntakeOff))); 
-
+        
+        //InBelt
+        m_controller2.rightBumper().onTrue(new InstantCommand(m_belt:: jammed)). onFalse(new InstantCommand(m_belt:: off));
+        m_controller2.axisGreaterThan(3, .7).onTrue(new InstantCommand(m_belt:: intake)).onFalse(new InstantCommand(m_belt:: off));
+        
+        //Shooter 
+        m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(m_shooter:: shoot1)).onFalse(new InstantCommand(m_shooter::off));
         //new RunCommand(m_pivot::IntakeOn, m_pivot)
           // new RunCommand(m_leds:: setIntaking, m_leds)
           // "Up" Intake Button

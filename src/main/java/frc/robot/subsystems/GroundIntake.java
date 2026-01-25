@@ -32,7 +32,7 @@ public class GroundIntake extends SubsystemBase{
 
     private double pivotTargetRotations;
     private double PIVOT_UP_POSITION   = -3;
-    private double PIVOT_DOWN_POSITION = -9.83;
+    private double PIVOT_DOWN_POSITION = -10.23;
     private boolean pivotEnabled = false;
    
     public GroundIntake (){
@@ -56,7 +56,7 @@ public class GroundIntake extends SubsystemBase{
 
         PivotConfigs.CurrentLimits.StatorCurrentLimit = 120;
         PivotConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
-        PivotConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        PivotConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotor.getConfigurator().apply(PivotConfigs);
         
         
@@ -72,7 +72,7 @@ public class GroundIntake extends SubsystemBase{
         pivotPID.reset();
         pivotTargetRotations = PIVOT_UP_POSITION;
         pivotEnabled = true;
-        IntakeMotor.set(.1);
+        IntakeMotor.set(.25);
 
 
     }
@@ -80,7 +80,7 @@ public class GroundIntake extends SubsystemBase{
     public void setPivotDown() {
         pivotPID.reset();
         pivotTargetRotations = PIVOT_DOWN_POSITION;
-        IntakeMotor.set(.1);
+        IntakeMotor.set(.25);
         pivotEnabled = true;
     }
 
