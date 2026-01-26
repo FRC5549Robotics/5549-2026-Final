@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
@@ -41,6 +42,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.GroundIntake;
+import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.InBelt;
 import frc.robot.subsystems.Shooter;
 
@@ -66,7 +68,8 @@ public class RobotContainer {
 
     
     JoystickButton groundIntakeButton = new JoystickButton(m_controller2.getHID(), 6);
-    
+    POVButton lowerHood = new POVButton(m_controller2.getHID(), 180);
+    POVButton raiseHood = new POVButton(m_controller2.getHID(), 0);
 
     // private final Limelight m_limelight = new Limelight(m_drive, m_controller);
     // private final Intake m_intake = new Intake();
@@ -75,6 +78,7 @@ public class RobotContainer {
     private final GroundIntake m_pivot = new GroundIntake();
     private final InBelt m_belt = new InBelt();
     private final Shooter m_shooter = new Shooter();
+    private final Hood m_hood = new Hood();
     // private final Candle m_leds = new Candle();
     
     //AUTOCHOOSER SET UP
@@ -248,6 +252,10 @@ public class RobotContainer {
         
         //Shooter 
         m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(m_shooter:: shoot1)).onFalse(new InstantCommand(m_shooter::off));
+
+        //Hood
+        raiseHood.whileTrue(new RunCommand(m_hood:: HoodUp)).onFalse(new InstantCommand(m_hood:: HoodOff));
+        lowerHood.whileTrue(new RunCommand(m_hood:: HoodDown)).onFalse(new InstantCommand(m_hood:: HoodOff));
         //new RunCommand(m_pivot::IntakeOn, m_pivot)
           // new RunCommand(m_leds:: setIntaking, m_leds)
           // "Up" Intake Button

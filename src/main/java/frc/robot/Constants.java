@@ -196,6 +196,9 @@ public final class Constants {
     //Shooter constants
     public static final int LEFT_MOTOR_ID = 15;
     public static final int RIGHT_MOTOR_ID = 16;
+
+    //HOOD constants
+    public static final int HOOD_MOTOR_ID = 17;
     //CANdle
     public static final int CANDLE_ID = 19;
 } 
