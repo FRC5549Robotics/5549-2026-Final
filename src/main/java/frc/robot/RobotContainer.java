@@ -80,16 +80,21 @@ public class RobotContainer {
     private final Shooter m_shooter = new Shooter();
     private final Hood m_hood = new Hood();
     // private final Candle m_leds = new Candle();
+
     
-    //AUTOCHOOSER SET UP
-    // private final SendableChooser<Command> autoChooser;
+    // AUTOCHOOSER SET UP
+    private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        configureBindings();
+        drivetrain.configurePathPlanner();  
+        autoChooser = AutoBuilder.buildAutoChooser();
     //     autoChooser = AutoBuilder.buildAutoChooser();
         
         
-    //     SmartDashboard.putData("Auto Chooser", autoChooser);
+        SmartDashboard.putData("Auto Chooser", autoChooser);
+        NamedCommands.registerCommand("RunBelt", new InstantCommand(m_belt::intake));
+        NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
+        configureBindings();
     //     NamedCommands.registerCommand("RunBelt", new InstantCommand(m_Belt::runBelt));
     //     NamedCommands.registerCommand("StopBelt", new InstantCommand(m_Belt::off));
     //     NamedCommands.registerCommand("ShootHigh", new InstantCommand(m_Shooter::shootHigh));
@@ -251,8 +256,8 @@ public class RobotContainer {
         m_controller2.axisGreaterThan(3, .7).onTrue(new InstantCommand(m_belt:: intake)).onFalse(new InstantCommand(m_belt:: off));
         
         //Shooter 
-        m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(m_shooter:: shoot1)).onFalse(new InstantCommand(m_shooter::off));
-
+        m_controller2.axisGreaterThan(2, .7).whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter:: shoot1), new RunCommand(m_pivot::shooting))).onFalse(new ParallelCommandGroup(new InstantCommand(m_shooter::off), new InstantCommand(m_pivot::off)));
+        m_controller2.leftBumper().whileTrue(new RunCommand(m_pivot::shooting)).onFalse(new InstantCommand(m_pivot::off));
         //Hood
         raiseHood.whileTrue(new RunCommand(m_hood:: HoodUp)).onFalse(new InstantCommand(m_hood:: HoodOff));
         lowerHood.whileTrue(new RunCommand(m_hood:: HoodDown)).onFalse(new InstantCommand(m_hood:: HoodOff));
@@ -262,21 +267,28 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        final var idle = new SwerveRequest.Idle();
-        return Commands.sequence(
-            // Reset our field centric heading to match the robot
-            // facing away from our alliance station wall (0 deg).
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-            // Then slowly drive forward (away from us) for 5 seconds.
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(0.5)
-                    .withVelocityY(0)
-                    .withRotationalRate(0)
-            )
-            .withTimeout(5.0),
-            // Finally idle for the rest of auton
-            drivetrain.applyRequest(() -> idle)
-        );
+
+        // An example command will be run in autonomous
+        // return Commands.sequence(new WaitCommand(0.25), resetOdometry, myTrajectory);
+        // return new HardcodedAuton(m_drive, m_pivot, m_elevator, m_shintake);
+        System.out.println("getAutonomousCommand");
+        return new PathPlannerAuto("polina");
+    
+        // // Simple drive forward auton
+        // final var idle = new SwerveRequest.Idle();
+        // return Commands.sequence(
+        //     // Reset our field centric heading to match the robot
+        //     // facing away from our alliance station wall (0 deg).
+        //     drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
+        //     // Then slowly drive forward (away from us) for 5 seconds.
+        //     drivetrain.applyRequest(() ->
+        //         drive.withVelocityX(0.5)
+        //             .withVelocityY(0)
+        //             .withRotationalRate(0)
+        //     )
+        //     .withTimeout(5.0),
+        //     // Finally idle for the rest of auton
+        //     drivetrain.applyRequest(() -> idle)
+        // );
     }
 }

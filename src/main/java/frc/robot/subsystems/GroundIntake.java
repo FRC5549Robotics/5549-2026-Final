@@ -84,6 +84,18 @@ public class GroundIntake extends SubsystemBase{
         pivotEnabled = true;
     }
 
+    public void shooting(){
+        System.out.println("pivoting?");
+        pivotEnabled = true;
+        pivotPID.reset();
+        if(pivotMotor.getPosition().getValueAsDouble()< -5){
+            pivotTargetRotations= -4.2;
+        }
+        else if(pivotMotor.getPosition().getValueAsDouble() > -4.2){
+            pivotTargetRotations = PIVOT_DOWN_POSITION;
+        }
+    }
+
     
 
     public void IntakeReverse(){
