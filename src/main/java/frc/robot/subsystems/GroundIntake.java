@@ -8,7 +8,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -27,12 +30,12 @@ public class GroundIntake extends SubsystemBase{
     TalonFXConfigurator PivotConfigurator;
     ProfiledPIDController ElevatorController;
 
-    SparkMax IntakeMotor;
-    SparkMaxConfig IntakeConfig;
+    SparkFlex IntakeMotor;
+    SparkFlexConfig IntakeConfig;
 
     private double pivotTargetRotations;
     private double PIVOT_UP_POSITION   = -3;
-    private double PIVOT_DOWN_POSITION = -10.23;
+    private double PIVOT_DOWN_POSITION = -10.6;
     private boolean pivotEnabled = false;
    
     public GroundIntake (){
@@ -47,8 +50,8 @@ public class GroundIntake extends SubsystemBase{
         // canRange = new CANrange(Constants.CANRANGE_ID);
 
 
-        IntakeMotor = new SparkMax(Constants.GROUND_INTAKE_ID, MotorType.kBrushless);
-        IntakeConfig = new SparkMaxConfig();
+        IntakeMotor = new SparkFlex(Constants.GROUND_INTAKE_ID, MotorType.kBrushless);
+        IntakeConfig = new SparkFlexConfig();
         IntakeConfig.idleMode(IdleMode.kBrake);
         IntakeMotor.configure(IntakeConfig, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters );
         
@@ -80,7 +83,7 @@ public class GroundIntake extends SubsystemBase{
     public void setPivotDown() {
         pivotPID.reset();
         pivotTargetRotations = PIVOT_DOWN_POSITION;
-        IntakeMotor.set(.25);
+        IntakeMotor.set(.5);
         pivotEnabled = true;
     }
 
@@ -89,9 +92,9 @@ public class GroundIntake extends SubsystemBase{
         pivotEnabled = true;
         pivotPID.reset();
         if(pivotMotor.getPosition().getValueAsDouble()< -5){
-            pivotTargetRotations= -4.2;
+            pivotTargetRotations= -4.4;
         }
-        else if(pivotMotor.getPosition().getValueAsDouble() > -4.2){
+        else if(pivotMotor.getPosition().getValueAsDouble() > -4.4){
             pivotTargetRotations = PIVOT_DOWN_POSITION;
         }
     }

@@ -94,8 +94,12 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Chooser", autoChooser);
         NamedCommands.registerCommand("RunBelt", new InstantCommand(m_belt::intake));
         NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
+        NamedCommands.registerCommand("PivotDown", new InstantCommand(m_pivot:: setPivotDown));
+        NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
+        NamedCommands.registerCommand("Shoot1", new InstantCommand(m_shooter::shoot1));
+        NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
         configureBindings();
-    //     NamedCommands.registerCommand("RunBelt", new InstantCommand(m_Belt::runBelt));
+    //     NamedCommands.registerpCommand("RunBelt", new InstantCommand(m_Belt::runBelt));
     //     NamedCommands.registerCommand("StopBelt", new InstantCommand(m_Belt::off));
     //     NamedCommands.registerCommand("ShootHigh", new InstantCommand(m_Shooter::shootHigh));
     //     NamedCommands.registerCommand("Intake", new InstantCommand(m_intake::intake));
