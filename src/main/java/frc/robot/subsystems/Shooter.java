@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.controller.ControlAffinePlantInversionFeedforward;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,8 +17,8 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 public class Shooter extends SubsystemBase {
-  private final TalonFX left = new TalonFX(Constants.LEFT_MOTOR_ID);
-  private final TalonFX right = new TalonFX(Constants.RIGHT_MOTOR_ID);
+  private final TalonFX left = new TalonFX(Constants.LEFT_MOTOR_ID, "lil clanker");
+  private final TalonFX right = new TalonFX(Constants.RIGHT_MOTOR_ID, "lil clanker");
 
   // Phoenix 6 request object (reuse it; don’t new it every loop)
   private final VelocityVoltage leftVelReq = new VelocityVoltage(0);
@@ -60,11 +61,13 @@ private final Follower rightFollower =
   // Call this to spin up to a speed
   public void setShooterRPM(double rpm) {
     targetRPM = rpm;
-    shooterEnabled = rpm > 0.0;
+    // shooterEnabled = rpm > 0.0;
   }
 
   public void shoot1() {
-    setShooterRPM(1000); // This controls the erectile dysfunction rate
+    System.out.println("shooting");
+    setShooterRPM(600); // This controls the erectile dysfunction rate
+    shooterEnabled = true;
   }
 
   public void off() {

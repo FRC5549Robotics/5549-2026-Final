@@ -45,7 +45,7 @@ import frc.robot.subsystems.GroundIntake;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.InBelt;
 import frc.robot.subsystems.Shooter;
-
+import frc.robot.subsystems.LED;
 public class RobotContainer {
 
   private final CommandXboxController m_controller2 = new CommandXboxController(Constants.OPERATOR_CONTROLLER);
@@ -79,6 +79,7 @@ public class RobotContainer {
     private final InBelt m_belt = new InBelt();
     private final Shooter m_shooter = new Shooter();
     private final Hood m_hood = new Hood();
+    private final LED m_Led = new LED();
     // private final Candle m_leds = new Candle();
 
     
@@ -260,7 +261,8 @@ public class RobotContainer {
         m_controller2.axisGreaterThan(3, .7).onTrue(new InstantCommand(m_belt:: intake)).onFalse(new InstantCommand(m_belt:: off));
         
         //Shooter 
-        m_controller2.axisGreaterThan(2, .7).whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter:: shoot1), new RunCommand(m_pivot::shooting))).onFalse(new ParallelCommandGroup(new InstantCommand(m_shooter::off), new InstantCommand(m_pivot::off)));
+        // m_controller2.axisGreaterThan(2, .7).whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter:: shoot1), new InstantCommand(m_Led:: setGreen))).onFalse(new ParallelCommandGroup(new InstantCommand(m_shooter::off), new InstantCommand(m_pivot::off)));
+        m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(m_shooter::shoot1)).onFalse(new InstantCommand(m_shooter::off));
         m_controller2.leftBumper().whileTrue(new RunCommand(m_pivot::shooting)).onFalse(new InstantCommand(m_pivot::off));
         //Hood
         raiseHood.whileTrue(new RunCommand(m_hood:: HoodUp)).onFalse(new InstantCommand(m_hood:: HoodOff));

@@ -154,19 +154,7 @@ public final class Constants {
     public static final double INTAKE_SPEED = .65;
     public static final int INTAKE = 0;
 
-    //Shooter Constants
-    public static final int OUTTAKE_MOTOR_LEFT = 13;
-    public static final int OUTTAKE_MOTOR_RIGHT = 14;
-    public static final double OUTTAKE_MOTOR_LEFT_SPEED_HIGH = -.228;
-    // -.232
-    public static final double OUTTAKE_MOTOR_RIGHT_SPEED_HIGH = .219; 
-    // .248
-    public static final double OUTTAKE_MOTOR_RIGHT_SPEED_LOW = .175;
-    public static final double OUTTAKE_MOTOR_LEFT_SPEED_LOW = -.18;
-    public static final double SHOOT_HIGH = .6;
-
-    public static final double SHOOT_LOW = .6;
-
+   
 
   // //Limelight Constants
   //   public static final double ROT_SETPOINT_REEF_ALIGNMENT = 0.0;
@@ -181,16 +169,17 @@ public final class Constants {
     public static final int BELT_MOTOR_ID = 18;
 
   //GroundIntake Constants
-    public static final int PIVOT_MOTOR_ID = 13;
+    public static final int PIVOT_MOTOR_ID = 18;
     public static final double PIVOT_DOWN_POSITION = 2;
     public static final double PIVOT_UP_POSITION = 0;
-    public static final int GROUND_INTAKE_ID = 23;
+    public static final int GROUND_INTAKE_ID = 17;
     public static final double GROUND_PIVOT_SPEED = 0.15;
+    public static final int PIVOT_ABS_ENC_DIO = 4;
 
   //Belt Constants
     public static final int Belt_MOTOR_ID = 14;
     //CanRange
-    public static final int CANRANGE_ID = 20;
+    //public static final int CANRANGE_ID = 20;
 
 
     //Shooter constants
@@ -198,7 +187,7 @@ public final class Constants {
     public static final int RIGHT_MOTOR_ID = 16;
 
     //HOOD constants
-    public static final int HOOD_MOTOR_ID = 17;
+    public static final int HOOD_MOTOR_ID = 13;
     //CANdle
     public static final int CANDLE_ID = 19;
 } 

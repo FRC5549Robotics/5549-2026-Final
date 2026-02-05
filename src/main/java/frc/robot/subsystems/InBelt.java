@@ -29,7 +29,7 @@ public class InBelt extends SubsystemBase{
     
     
     public InBelt (){
-    belt = new TalonFX(Constants.Belt_MOTOR_ID);
+    belt = new TalonFX(Constants.Belt_MOTOR_ID, "lil clanker");
     
     beltConfigs = new TalonFXConfiguration();
     beltConfigurator = belt.getConfigurator();
@@ -47,6 +47,7 @@ public class InBelt extends SubsystemBase{
 
     public void intake(){
         belt.set(.6);
+        System.out.println("belting");
     }
     public void jammed(){
         belt.set(-.2);
