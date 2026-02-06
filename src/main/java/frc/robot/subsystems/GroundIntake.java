@@ -37,8 +37,8 @@ public class GroundIntake extends SubsystemBase {
     private double pivotTargetRotations;
 
     // your existing setpoints (continuous rotations style)
-    private final double PIVOT_UP_POSITION   = -3;
-    private final double PIVOT_DOWN_POSITION = -10.6;
+    private final double PIVOT_UP_POSITION   = 300;
+    private final double PIVOT_DOWN_POSITION = 60;
 
     private boolean pivotEnabled = false;
 
@@ -83,7 +83,7 @@ public class GroundIntake extends SubsystemBase {
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
     public double getPivotPosition() {
-        //System.out.println("encoding " + pivotAbsEncoder.isConnected());
+        System.out.println("encoding " + pivotAbsEncoder.isConnected());
         // Returns absolute position in DEGREES (0–360)
         return pivotAbsEncoder.get();
     }
@@ -111,9 +111,9 @@ public class GroundIntake extends SubsystemBase {
 
         double pos = getPivotPosition();
 
-        if (pos < -5) {
-            pivotTargetRotations = -4.4;
-        } else if (pos > -4.4) {
+        if (pos < 100) {
+            pivotTargetRotations = 200;
+        } else if (pos > 100) {
             pivotTargetRotations = PIVOT_DOWN_POSITION;
         }
     }
@@ -139,8 +139,8 @@ public class GroundIntake extends SubsystemBase {
 
         SmartDashboard.putNumber("GI DIO Channel", Constants.PIVOT_ABS_ENC_DIO);
         SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected());
-        SmartDashboard.putNumber("GI Enc Raw", raw);
-        SmartDashboard.putNumber("GI Enc Degrees", raw * 360.0);
+        SmartDashboard.putNumber("GI Enc Degrees", raw);
+        //SmartDashboard.putNumber("GI Enc Degrees", raw * 360.0);
         SmartDashboard.putBoolean("GI Enc Raw!=0", raw != 0.0);
         double currentPos = getPivotPosition();
         SmartDashboard.putNumber("Pivot Pos", currentPos);
