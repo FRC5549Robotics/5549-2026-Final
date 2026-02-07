@@ -253,9 +253,10 @@ public class RobotContainer {
 
 
         // groundIntakeButton.whileTrue(new InstantCommand(m_pivot :: pivotDown)).onFalse(new InstantCommand(m_pivot::off));
-        m_controller2.axisLessThan(1, -0.7).onTrue(new InstantCommand(m_pivot::setPivotDown)).onFalse(new InstantCommand(m_pivot::off)); 
-        m_controller2.axisGreaterThan(1, 0.7).onTrue(new InstantCommand(m_pivot::setPivotUp)).onFalse(Commands.parallel(new InstantCommand(m_pivot::off), new InstantCommand(m_pivot::IntakeOff))); 
         
+
+        m_controller2.axisGreaterThan(1, 0.7).whileTrue(new InstantCommand(m_pivot::setPivotDown)).onFalse(new InstantCommand(m_pivot::off)); 
+        m_controller2.axisLessThan(1, -0.7).whileTrue(new InstantCommand(m_pivot::setPivotUp)).onFalse(new InstantCommand(m_pivot::off)); 
         //InBelt
         m_controller2.rightBumper().onTrue(new InstantCommand(m_belt:: jammed)). onFalse(new InstantCommand(m_belt:: off));
         m_controller2.axisGreaterThan(3, .7).onTrue(new InstantCommand(m_belt:: intake)).onFalse(new InstantCommand(m_belt:: off));

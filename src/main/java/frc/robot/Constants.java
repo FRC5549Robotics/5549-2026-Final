@@ -174,7 +174,7 @@ public final class Constants {
     public static final double PIVOT_UP_POSITION = 0;
     public static final int GROUND_INTAKE_ID = 17;
     public static final double GROUND_PIVOT_SPEED = 0.15;
-    public static final int PIVOT_ABS_ENC_DIO = 4;
+    public static final int PIVOT_ABS_ENC_DIO = 5;
 
   //Belt Constants
     public static final int Belt_MOTOR_ID = 14;

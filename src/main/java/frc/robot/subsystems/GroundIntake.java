@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import javax.lang.model.util.ElementScanner14;
+
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
@@ -19,9 +21,9 @@ import edu.wpi.first.wpilibj.Encoder;
 public class GroundIntake extends SubsystemBase {
 
     private final SparkMax pivotMotor;
-    private final PIDController pivotPID;
+    //private final PIDController pivotPID;
 
-    private final SparkFlex intakeMotor;
+    private final SparkMax intakeMotor;
 
     // Raw duty cycle input + decoded encoder (helps debug)
     private final DutyCycleEncoder pivotAbsEncoder;
@@ -30,17 +32,20 @@ public class GroundIntake extends SubsystemBase {
     private static final double ENC_TO_PIVOT_RATIO = 1.0; // gearing ratio if needed
 
     // continuous unwrap state
-    private double lastAdjAbsRot = 0.0;
-    private double continuousRot = 0.0;
-    private boolean absInit = false;
+    //private double lastAdjAbsRot = 0.0;
+    //private double continuousRot = 0.0;
+    //private boolean absInit = false;
 
     private double pivotTargetRotations;
 
     // your existing setpoints (continuous rotations style)
-    private final double PIVOT_UP_POSITION   = 300;
-    private final double PIVOT_DOWN_POSITION = 60;
+    private final double PIVOT_UP_POSITION   = 140;
+    private final double PIVOT_DOWN_POSITION = 270;
 
     private boolean pivotEnabled = false;
+
+    private double upOrDown = 0;
+
 
     public GroundIntake() {
         pivotMotor = new SparkMax(Constants.PIVOT_MOTOR_ID, MotorType.kBrushless);
@@ -48,10 +53,8 @@ public class GroundIntake extends SubsystemBase {
             Constants.PIVOT_ABS_ENC_DIO,
             360.0,   // full range = 360 degrees per rotation
             0.0      // zero position (can change later)
-    
-        
+
         );
-                  // degrees
 
         SparkMaxConfig pivotConfig = new SparkMaxConfig();
         pivotConfig.idleMode(IdleMode.kBrake);
@@ -61,8 +64,8 @@ public class GroundIntake extends SubsystemBase {
             com.revrobotics.PersistMode.kPersistParameters
         );
 
-        intakeMotor = new SparkFlex(Constants.GROUND_INTAKE_ID, MotorType.kBrushless);
-        SparkFlexConfig intakeConfig = new SparkFlexConfig();
+        intakeMotor = new SparkMax(Constants.GROUND_INTAKE_ID, MotorType.kBrushless);
+        SparkMaxConfig intakeConfig = new SparkMaxConfig();
         intakeConfig.idleMode(IdleMode.kBrake);
         intakeMotor.configure(
             intakeConfig,
@@ -74,8 +77,8 @@ public class GroundIntake extends SubsystemBase {
         
         
 
-        pivotPID = new PIDController(0.3, 0.0, 0.0);
-        pivotPID.setTolerance(0.05);
+        //pivotPID = new PIDController(0.3, 0.0, 0.0);
+        //pivotPID.setTolerance(0.05);
 
         pivotTargetRotations = 0.0;
     }
@@ -83,31 +86,45 @@ public class GroundIntake extends SubsystemBase {
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
     public double getPivotPosition() {
-        System.out.println("encoding " + pivotAbsEncoder.isConnected());
+        //System.out.println(pivotTargetRotations);
         // Returns absolute position in DEGREES (0–360)
         return pivotAbsEncoder.get();
     }
 
-
-
-
     public void setPivotUp() {
-        pivotPID.reset();
+        //pivotPID.reset();
+        upOrDown = 1;
         pivotTargetRotations = PIVOT_UP_POSITION;
         pivotEnabled = true;
-        intakeMotor.set(0.25);
+        //intakeMotor.set(0.25);
+        System.out.println(getPivotPosition());
+        if (getPivotPosition() > 180) {
+            System.out.println("up");
+            pivotMotor.set(0.2);
+        } else {
+            pivotMotor.set(0.0);
+        }
+
     }
 
     public void setPivotDown() {
-        pivotPID.reset();
+        //pivotPID.reset();
+        upOrDown = -1;
         pivotTargetRotations = PIVOT_DOWN_POSITION;
         intakeMotor.set(0.5);
         pivotEnabled = true;
+        System.out.println(getPivotPosition());
+        if (getPivotPosition() < 260) {
+            System.out.println("down");
+            pivotMotor.set(-0.1);
+        } else {
+            pivotMotor.set(0.0);
+        }
     }
 
     public void shooting() {
         pivotEnabled = true;
-        pivotPID.reset();
+        //pivotPID.reset();
 
         double pos = getPivotPosition();
 
@@ -122,12 +139,13 @@ public class GroundIntake extends SubsystemBase {
         intakeMotor.set(0.3);
     }
 
-    public void IntakeOff() {
-        intakeMotor.set(0.0);
-    }
+    //public void IntakeOff() {
+        //intakeMotor.set(0.0);
+    //}
 
     public void off() {
         pivotEnabled = false;
+        //System.out.println(pivotEnabled);
         intakeMotor.set(0.0);
         pivotMotor.set(0.0);
     }
@@ -145,16 +163,9 @@ public class GroundIntake extends SubsystemBase {
         double currentPos = getPivotPosition();
         SmartDashboard.putNumber("Pivot Pos", currentPos);
         SmartDashboard.putNumber("Pivot Target", pivotTargetRotations);
+        SmartDashboard.putNumber("Up or down (up is 1, down is -1)", upOrDown);
 
-        if (!pivotEnabled) {
-            SmartDashboard.putNumber("Pivot Output", 0.0);
-            return;
-        }
+        
 
-        double output = pivotPID.calculate(currentPos, pivotTargetRotations);
-        output = MathUtil.clamp(output, -0.15, 0.15);
-
-        pivotMotor.set(output);
-        SmartDashboard.putNumber("Pivot Output", output);
     }
 }
