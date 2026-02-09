@@ -66,7 +66,7 @@ private final Follower rightFollower =
 
   public void shoot1() {
     System.out.println("shooting");
-    setShooterRPM(600); // This controls the erectile dysfunction rate
+    setShooterRPM(700); // This controls the erectile dysfunction rate
     shooterEnabled = true;
   }
 

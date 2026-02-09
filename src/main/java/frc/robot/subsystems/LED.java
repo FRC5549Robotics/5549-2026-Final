@@ -28,7 +28,7 @@ public class LED extends SubsystemBase {
 
         // Turn all LEDs solid green (0–399, adjust length as needed)
         candle.setControl(
-            new SolidColor(0, 399).withColor(RED)
+            new SolidColor(0, 399).withColor(GREEN)
         );
     }
     public void setGreen() {
