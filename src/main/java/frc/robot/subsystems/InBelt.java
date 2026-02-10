@@ -15,8 +15,10 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
+import edu.wpi.first.wpilibj.Timer;
 
 public class InBelt extends SubsystemBase{
     TalonFX belt;
@@ -45,8 +47,9 @@ public class InBelt extends SubsystemBase{
     belt.getConfigurator().apply(beltConfigs);
     }
 
+    
     public void intake(){
-        belt.set(.6);
+        belt.set(.9);
         System.out.println("belting");
     }
     public void jammed(){

@@ -39,8 +39,8 @@ public class GroundIntake extends SubsystemBase {
     private double pivotTargetRotations;
 
     // your existing setpoints (continuous rotations style)
-    private final double PIVOT_UP_POSITION   = 140;
-    private final double PIVOT_DOWN_POSITION = 270;
+    private final double PIVOT_UP_POSITION   = 145;
+    private final double PIVOT_DOWN_POSITION = 268;
 
     private boolean pivotEnabled = false;
 
@@ -98,9 +98,9 @@ public class GroundIntake extends SubsystemBase {
         pivotEnabled = true;
         //intakeMotor.set(0.25);
         System.out.println(getPivotPosition());
-        if (getPivotPosition() > 180) {
+        if (getPivotPosition() > 190) {
             System.out.println("up");
-            pivotMotor.set(0.2);
+            pivotMotor.set(0.3);
         } else {
             pivotMotor.set(0.0);
         }
@@ -114,9 +114,9 @@ public class GroundIntake extends SubsystemBase {
         intakeMotor.set(0.4);
         pivotEnabled = true;
         System.out.println(getPivotPosition());
-        if (getPivotPosition() < 260) {
+        if (getPivotPosition() < 265) {
             System.out.println("down");
-            pivotMotor.set(-0.1);
+            pivotMotor.set(-0.3);
         } else {
             pivotMotor.set(0.0);
         }
@@ -127,11 +127,13 @@ public class GroundIntake extends SubsystemBase {
         //pivotPID.reset();
 
         double pos = getPivotPosition();
+        
+        System.out.println(pos);
 
-        if (pos < 100) {
-            pivotTargetRotations = 200;
-        } else if (pos > 100) {
-            pivotTargetRotations = PIVOT_DOWN_POSITION;
+        if (pos < 190) {
+            pivotMotor.set(-.2);
+        } else if (pos > 205) {
+            pivotMotor.set(.2);
         }
     }
 

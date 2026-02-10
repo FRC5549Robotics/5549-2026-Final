@@ -29,7 +29,7 @@ public class Hood extends SubsystemBase{
     public void HoodUp(){
         double pos = HoodMotor.getPosition().getValueAsDouble();
 
-        if (pos < 4.4) {
+        if (pos < 4.3) {
             HoodMotor.set(0.1);  // move up
             System.out.println("Hood going up, Hood go vroom vroom");
         } else {
@@ -58,7 +58,10 @@ public class Hood extends SubsystemBase{
         public void HoodOff() {
         HoodMotor.set(0.0);
     }
-
+    public void periodic(){
+        double pos = HoodMotor.getPosition().getValueAsDouble();
+        SmartDashboard.putNumber("Hood Position", pos);
+    }
     
     
     

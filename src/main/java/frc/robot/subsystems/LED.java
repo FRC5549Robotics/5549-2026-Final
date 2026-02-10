@@ -13,7 +13,7 @@ public class LED extends SubsystemBase {
     private final CANdle candle;
 
     private static final RGBWColor GREEN = new RGBWColor(0, 255, 0, 0);
-    private static final RGBWColor RED = new RGBWColor(255, 0, 0, 0);
+    private static final RGBWColor PINK = new RGBWColor(255, 0, 255, 0);
     
 
     public LED() {
@@ -34,4 +34,7 @@ public class LED extends SubsystemBase {
     public void setGreen() {
         candle.setControl( new SolidColor(0, 399).withColor(GREEN));
     };
+    public void setPink(){
+        candle.setControl(new SolidColor(0, 399).withColor(PINK));
+    }
 }

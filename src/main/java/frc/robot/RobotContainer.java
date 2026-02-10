@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
+import frc.robot.commands.AlignToHubTagRelative;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -63,11 +63,13 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
+    JoystickButton AutoAlign = new JoystickButton(joystick.getHID(), 3);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     
     JoystickButton groundIntakeButton = new JoystickButton(m_controller2.getHID(), 6);
+    
     POVButton lowerHood = new POVButton(m_controller2.getHID(), 180);
     POVButton raiseHood = new POVButton(m_controller2.getHID(), 0);
 
@@ -85,7 +87,13 @@ public class RobotContainer {
     
     // AUTOCHOOSER SET UP
     private final SendableChooser<Command> autoChooser;
+    public Command beltCommand(){
+        return new WaitCommand(1.5).andThen(() -> m_belt.intake());
+    }
 
+    public Command intakeCommand(){
+        return new WaitCommand(2).andThen(() -> new RunCommand(m_pivot::shooting));
+    }
     public RobotContainer() {
         drivetrain.configurePathPlanner();  
         autoChooser = AutoBuilder.buildAutoChooser();
@@ -214,6 +222,7 @@ public class RobotContainer {
     //   }
 
     }
+    
 
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
@@ -250,13 +259,15 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+        joystick.povRight().onTrue(new AlignToHubTagRelative(true, drivetrain).withTimeout(3));
+
 
 
         // groundIntakeButton.whileTrue(new InstantCommand(m_pivot :: pivotDown)).onFalse(new InstantCommand(m_pivot::off));
         
 
-        m_controller2.axisGreaterThan(1, 0.7).whileTrue(new InstantCommand(m_pivot::setPivotDown)).onFalse(new InstantCommand(m_pivot::off)); 
-        m_controller2.axisLessThan(1, -0.7).whileTrue(new InstantCommand(m_pivot::setPivotUp)).onFalse(new InstantCommand(m_pivot::off)); 
+        m_controller2.axisGreaterThan(1, 0.7).whileTrue(new RunCommand(m_pivot::setPivotDown)).onFalse(new InstantCommand(m_pivot::off)); 
+        m_controller2.axisLessThan(1, -0.7).whileTrue(new RunCommand(m_pivot::setPivotUp)).onFalse(Commands.parallel(new InstantCommand(m_pivot::off))); 
         //InBelt
         m_controller2.rightBumper().onTrue(new InstantCommand(m_belt:: jammed)). onFalse(new InstantCommand(m_belt:: off));
         m_controller2.axisGreaterThan(3, .7).onTrue(new InstantCommand(m_belt:: intake)).onFalse(new InstantCommand(m_belt:: off));
@@ -264,7 +275,8 @@ public class RobotContainer {
         //Shooter 
         // m_controller2.axisGreaterThan(2, .7).whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter:: shoot1), new InstantCommand(m_Led:: setGreen))).onFalse(new ParallelCommandGroup(new InstantCommand(m_shooter::off), new InstantCommand(m_pivot::off)));
         m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(m_shooter::shoot1)).onFalse(new InstantCommand(m_shooter::off));
-        m_controller2.leftBumper().whileTrue(new RunCommand(m_pivot::shooting)).onFalse(new InstantCommand(m_pivot::off));
+        m_controller2.leftBumper().whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter::shoot1), beltCommand(), new InstantCommand(m_Led:: setPink))).onFalse(new ParallelCommandGroup( new InstantCommand(m_shooter::off), new InstantCommand(m_belt::off), new InstantCommand(m_Led:: setGreen)));
+        
         //Hood
         raiseHood.whileTrue(new RunCommand(m_hood:: HoodUp)).onFalse(new InstantCommand(m_hood:: HoodOff));
         lowerHood.whileTrue(new RunCommand(m_hood:: HoodDown)).onFalse(new InstantCommand(m_hood:: HoodOff));
