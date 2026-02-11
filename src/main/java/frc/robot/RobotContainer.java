@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.AlignToHubTagRelative;
+import frc.robot.commands.AlignLimelight;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -41,11 +41,16 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import frc.robot.subsystems.GroundIntake;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.InBelt;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.LED;
+import frc.robot.subsystems.Limelight;
+import frc.robot.Vision.LimelightHelpers;
+
+
 public class RobotContainer {
 
   private final CommandXboxController m_controller2 = new CommandXboxController(Constants.OPERATOR_CONTROLLER);
@@ -70,10 +75,13 @@ public class RobotContainer {
     
     JoystickButton groundIntakeButton = new JoystickButton(m_controller2.getHID(), 6);
     
+    // JoystickButton AutoAlignLeft = new JoystickButton(joystick.getHID(), 3);
+    // JoystickButton AutoAlignRight = new JoystickButton(joystick.getHID(), 2);
+    
     POVButton lowerHood = new POVButton(m_controller2.getHID(), 180);
     POVButton raiseHood = new POVButton(m_controller2.getHID(), 0);
 
-    // private final Limelight m_limelight = new Limelight(m_drive, m_controller);
+    private final Limelight m_limelight = new Limelight(drivetrain, joystick);
     // private final Intake m_intake = new Intake();
     // private final Shooter m_Shooter = new Shooter();
     // private final Belt m_Belt = new Belt();
@@ -259,7 +267,7 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.povRight().onTrue(new AlignToHubTagRelative(true, drivetrain).withTimeout(3));
+        // joystick.povRight().onTrue(new AlignLimelight(true, drivetrain).withTimeout(3));
 
 
 
@@ -283,6 +291,9 @@ public class RobotContainer {
         //new RunCommand(m_pivot::IntakeOn, m_pivot)
           // new RunCommand(m_leds:: setIntaking, m_leds)
           // "Up" Intake Button
+
+        //Limelight
+        AutoAlign.onTrue(new AlignLimelight(true, drivetrain).withTimeout(3));
     }
 
     public Command getAutonomousCommand() {

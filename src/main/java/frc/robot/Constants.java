@@ -168,8 +168,8 @@ public final class Constants {
   // //Limelight Constants
   //   public static final double ROT_SETPOINT_REEF_ALIGNMENT = 0.0;
   //   public static final double ROT_TOLERANCE_REEF_ALIGNMENT = 1.0;
-  //   public static final double X_SETPOINT_REEF_ALIGNMENT = 0.3;
-  //   public static final double X_TOLERANCE_REEF_ALIGNMENT = 0.01;    
+    public static final double TRANSLATION_TOLERANCE = 0.03;
+    // public static final double X_TOLERANCE_REEF_ALIGNMENT = 0.01;    
   //   public static final double Y_SETPOINT_RIGHT_REEF_ALIGNMENT = 0.0;
   //   public static final double Y_SETPOINT_LEFT_REEF_ALIGNMENT = 0.0;
   //   public static final double Y_TOLERANCE_REEF_ALIGNMENT = 0.01;

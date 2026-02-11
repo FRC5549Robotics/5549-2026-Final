@@ -15,15 +15,18 @@ import frc.robot.Constants;
 import frc.robot.Vision.LimelightHelpers;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
-public class AlignToHubTagRelative extends Command {
-  private PIDController xController, yController, rotController;
+public class AlignLimelight extends Command {
+  private PIDController rotController;
+  // xController, yController,
   private boolean isRightScore;
   private Timer dontSeeTagTimer, stopTimer;
   private CommandSwerveDrivetrain m_drive;
   private double tagID = -1;
 
-  public AlignToHubTagRelative(boolean isRightScore, CommandSwerveDrivetrain m_drive) {
+  public AlignLimelight(boolean isRightScore, CommandSwerveDrivetrain m_drive) {
     rotController = new PIDController(Constants.ROT_HUB_ALIGNMENT_P, 0, 0);  // Rotation
+    // xController = new PIDController(0.02, 0, 0); 
+    // yController = new PIDController(0.02, 0, 0);
     this.isRightScore = isRightScore;
     this.m_drive = m_drive;
     addRequirements(m_drive);
@@ -39,7 +42,15 @@ public class AlignToHubTagRelative extends Command {
     rotController.setSetpoint(Constants.ROT_SETPOINT_HUB_ALIGNMENT);
     rotController.setTolerance(Constants.ROT_TOLERANCE_HUB_ALIGNMENT);
 
+    // xController.setSetpoint(0); 
+    // yController.setSetpoint(0);
+    
+    // You must set tolerance, otherwise .atSetpoint() will always be false (or true depending on defaults)
+    // xController.setTolerance(Constants.TRANSLATION_TOLERANCE); 
+    // yController.setTolerance(Constants.TRANSLATION_TOLERANCE);
+
     tagID = LimelightHelpers.getFiducialID("");
+    System.out.println("pls initialize limelight thank you");
   }
 
   @Override
@@ -51,22 +62,23 @@ public class AlignToHubTagRelative extends Command {
       double[] postions = LimelightHelpers.getBotPose_TargetSpace("");
       SmartDashboard.putNumber("x", postions[2]);
 
-      double xSpeed = xController.calculate(postions[2]);
-      SmartDashboard.putNumber("xspee", xSpeed);
-      double ySpeed = -yController.calculate(postions[0]);
+      // double xSpeed = xController.calculate(postions[2]);
+      // SmartDashboard.putNumber("xspeed", xSpeed);
+      // double ySpeed = -yController.calculate(postions[0]);
       double rotValue = -rotController.calculate(postions[4]);
 
       m_drive.setControl(
         new SwerveRequest.FieldCentric()
-        .withVelocityX(xSpeed)
-        .withVelocityY(ySpeed)
+        // .withVelocityX(xSpeed)
+        // .withVelocityY(ySpeed)
         .withRotationalRate(rotValue)
         );
 
 
-      if (!rotController.atSetpoint() ||
-          !yController.atSetpoint() ||
-          !xController.atSetpoint()) {
+      if (!rotController.atSetpoint() ) {
+        // ||
+        //   !yController.atSetpoint() ||
+        //   !xController.atSetpoint()
         stopTimer.reset();
       }
     } else {
