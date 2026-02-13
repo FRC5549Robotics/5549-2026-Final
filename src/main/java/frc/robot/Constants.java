@@ -85,9 +85,9 @@ public final class Constants {
   // Distance between front and back wheels on robot
   public static final double kWheelBase = 0.51435;
 
-  public static final double ROT_HUB_ALIGNMENT_P = 0.05;
+  public static final double ROT_HUB_ALIGNMENT_P = 0.005;
 
-  public static final double ROT_TOLERANCE_HUB_ALIGNMENT = 0.0175;
+  public static final double ROT_TOLERANCE_HUB_ALIGNMENT = 0.05;
 
   public static final double ROT_SETPOINT_HUB_ALIGNMENT = 0;
 
@@ -169,6 +169,7 @@ public final class Constants {
   //   public static final double ROT_SETPOINT_REEF_ALIGNMENT = 0.0;
   //   public static final double ROT_TOLERANCE_REEF_ALIGNMENT = 1.0;
     public static final double TRANSLATION_TOLERANCE = 0.03;
+    public static final double TX_TOLARANCE = 1.0;
     // public static final double X_TOLERANCE_REEF_ALIGNMENT = 0.01;    
   //   public static final double Y_SETPOINT_RIGHT_REEF_ALIGNMENT = 0.0;
   //   public static final double Y_SETPOINT_LEFT_REEF_ALIGNMENT = 0.0;

@@ -293,7 +293,7 @@ public class RobotContainer {
           // "Up" Intake Button
 
         //Limelight
-        AutoAlign.onTrue(new AlignLimelight(true, drivetrain).withTimeout(3));
+        AutoAlign.whileTrue(m_limelight.alignToTargetCommand());
     }
 
     public Command getAutonomousCommand() {

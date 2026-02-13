@@ -56,16 +56,16 @@ public class AlignLimelight extends Command {
   @Override
   public void execute() {
     System.out.println("Aligning?");
-    if (LimelightHelpers.getTV("") && LimelightHelpers.getFiducialID("") == tagID) {
+    if (LimelightHelpers.getTV("limelight") && LimelightHelpers.getFiducialID("limelight") == tagID) {
       this.dontSeeTagTimer.reset();
 
-      double[] postions = LimelightHelpers.getBotPose_TargetSpace("");
-      SmartDashboard.putNumber("x", postions[2]);
+      double[] positions = LimelightHelpers.getBotPose_TargetSpace("");
+      SmartDashboard.putNumber("x", positions[2]);
 
       // double xSpeed = xController.calculate(postions[2]);
       // SmartDashboard.putNumber("xspeed", xSpeed);
       // double ySpeed = -yController.calculate(postions[0]);
-      double rotValue = -rotController.calculate(postions[4]);
+      double rotValue = -rotController.calculate(positions[4]);
 
       m_drive.setControl(
         new SwerveRequest.FieldCentric()

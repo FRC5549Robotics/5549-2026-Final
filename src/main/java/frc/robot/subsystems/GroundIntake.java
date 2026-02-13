@@ -2,6 +2,10 @@ package frc.robot.subsystems;
 
 import javax.lang.model.util.ElementScanner14;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
@@ -23,7 +27,9 @@ public class GroundIntake extends SubsystemBase {
     private final SparkMax pivotMotor;
     //private final PIDController pivotPID;
 
-    private final SparkMax intakeMotor;
+    //private final SparkMax intakeMotor;
+    private final TalonFX intakeMotor;
+    //TalonFXConfiguration HoodMotorConfig;
 
     // Raw duty cycle input + decoded encoder (helps debug)
     private final DutyCycleEncoder pivotAbsEncoder;
@@ -64,14 +70,12 @@ public class GroundIntake extends SubsystemBase {
             com.revrobotics.PersistMode.kPersistParameters
         );
 
-        intakeMotor = new SparkMax(Constants.GROUND_INTAKE_ID, MotorType.kBrushless);
-        SparkMaxConfig intakeConfig = new SparkMaxConfig();
-        intakeConfig.idleMode(IdleMode.kBrake);
-        intakeMotor.configure(
-            intakeConfig,
-            com.revrobotics.ResetMode.kResetSafeParameters,
-            com.revrobotics.PersistMode.kPersistParameters
-        );
+        intakeMotor = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker");
+        TalonFXConfiguration intakeConfig = new TalonFXConfiguration();
+        intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
+        intakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        intakeMotor.getConfigurator().apply(intakeConfig);
 
         // Through Bore PWM signal into RoboRIO DIO
         

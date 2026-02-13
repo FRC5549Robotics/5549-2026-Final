@@ -5,9 +5,12 @@
 package frc.robot.subsystems;
 
 import java.util.List;
+import java.util.function.DoubleSupplier;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
+
+import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -21,6 +24,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
@@ -41,6 +45,52 @@ public class Limelight extends SubsystemBase {
     xbox_controller = xcontroller;
     limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
   }
+
+  public Command alignToTargetCommand() {
+    return this.run(() -> {
+      double rotSpeed = 0.0;
+      
+      // Check if we see a target
+      if (LimelightHelpers.getTV("limelight")) {
+        // tx is the horizontal offset in degrees. 0 = centered.
+        double tx = LimelightHelpers.getTX("limelight");
+        
+        // Calculate PID output to get tx to 0
+        rotSpeed = rotationController.calculate(tx, 0); 
+      }
+
+      // Use the method built into your CommandSwerveDrivetrain
+      // This is robot-centric, which is fine for spinning in place.
+      m_drivetrain.driveRobotRelative(new ChassisSpeeds(0, 0, rotSpeed));
+    });
+  }
+
+  // ---------------------------------------------------------
+  // OPTION 2: Drive manually (Field Centric) while auto-aiming
+  // ---------------------------------------------------------
+  // We need a FieldCentric request object for this command
+  private final SwerveRequest.FieldCentric driveFieldCentric = new SwerveRequest.FieldCentric();
+
+  public Command alignWhileDrivingCommand(DoubleSupplier xSpeed, DoubleSupplier ySpeed) {
+    return this.run(() -> {
+      double rotSpeed = 0.0;
+
+      if (LimelightHelpers.getTV("limelight")) {
+        double tx = LimelightHelpers.getTX("limelight");
+        rotSpeed = rotationController.calculate(tx);
+      }
+
+      // We use setControl() with a FieldCentric request. 
+      // If we used driveRobotRelative here, forward on the joystick would 
+      // always be "Robot Forward", which gets confusing while the robot is spinning.
+      m_drivetrain.setControl(driveFieldCentric
+          .withVelocityX(xSpeed.getAsDouble())
+          .withVelocityY(ySpeed.getAsDouble())
+          .withRotationalRate(rotSpeed) // The auto-aim rotation
+      );
+    });
+  }
+
 
   public double[] turnToTarget(Boolean isRightScore) {
     //check for target
