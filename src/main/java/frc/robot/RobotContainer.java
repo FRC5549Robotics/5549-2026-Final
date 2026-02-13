@@ -26,7 +26,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
-
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -65,6 +65,7 @@ public class RobotContainer {
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
+
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
@@ -72,8 +73,9 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    
+    JoystickButton resetOdometry = new JoystickButton(joystick.getHID(), 8);
     JoystickButton groundIntakeButton = new JoystickButton(m_controller2.getHID(), 6);
+    
     
     // JoystickButton AutoAlignLeft = new JoystickButton(joystick.getHID(), 3);
     // JoystickButton AutoAlignRight = new JoystickButton(joystick.getHID(), 2);
@@ -244,6 +246,43 @@ public class RobotContainer {
             )
         );
 
+        //LIMELIGHT DRIVE LEFT BUMPER
+        SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric();
+
+        joystick.leftBumper().whileTrue(
+            drivetrain.applyRequest(() -> {
+                double rotationOutput = 0;
+                double deadband = 0.1;
+                double translationX = MathUtil.applyDeadband(joystick.getLeftY(), deadband);
+                double translationY = MathUtil.applyDeadband(joystick.getLeftX(), deadband);
+        
+                // 2. Check if the Limelight sees a target (tv = 1)
+                boolean hasTarget = LimelightHelpers.getTV("limelight");
+
+                if (hasTarget) {
+                double tx = LimelightHelpers.getTX("limelight");
+            
+            // 3. Calculate rotation using a simple P-controller.
+            // NOTE: If target is to the Right (+tx), we need to turn Clockwise (Negative Rotation).
+            // Therefore, we multiply by NEGATIVE kP.
+                double kP = 0.01; // Tune this value (start small, e.g., 0.05 or 0.1)
+                rotationOutput = tx * -kP * MaxAngularRate; 
+            
+            } else {
+            // 4. Fallback: If no target, give the driver manual rotation control
+                rotationOutput = -joystick.getRightX() * MaxAngularRate;
+            }
+
+        // 5. Apply the request with driver translation and calculated rotation
+            return aimRequest
+            // .withVelocityX(-joystick.getLeftY() * MaxSpeed)
+            // .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+            .withVelocityX(-translationX * MaxSpeed)
+            .withVelocityY(-translationY * MaxSpeed)
+            .withRotationalRate(rotationOutput);
+        })
+    );
+
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
@@ -264,7 +303,7 @@ public class RobotContainer {
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        resetOdometry.onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
         // joystick.povRight().onTrue(new AlignLimelight(true, drivetrain).withTimeout(3));
@@ -283,7 +322,7 @@ public class RobotContainer {
         //Shooter 
         // m_controller2.axisGreaterThan(2, .7).whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter:: shoot1), new InstantCommand(m_Led:: setGreen))).onFalse(new ParallelCommandGroup(new InstantCommand(m_shooter::off), new InstantCommand(m_pivot::off)));
         m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(m_shooter::shoot1)).onFalse(new InstantCommand(m_shooter::off));
-        m_controller2.leftBumper().whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter::shoot1), beltCommand(), new InstantCommand(m_Led:: setPink))).onFalse(new ParallelCommandGroup( new InstantCommand(m_shooter::off), new InstantCommand(m_belt::off), new InstantCommand(m_Led:: setGreen)));
+        m_controller2.leftBumper().whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter::shoot1), beltCommand(), new InstantCommand(m_Led:: setPink), drivetrain.applyRequest(() -> brake))).onFalse(new ParallelCommandGroup( new InstantCommand(m_shooter::off), new InstantCommand(m_belt::off), new InstantCommand(m_Led:: setGreen)));
         
         //Hood
         raiseHood.whileTrue(new RunCommand(m_hood:: HoodUp)).onFalse(new InstantCommand(m_hood:: HoodOff));
@@ -292,8 +331,14 @@ public class RobotContainer {
           // new RunCommand(m_leds:: setIntaking, m_leds)
           // "Up" Intake Button
 
-        //Limelight
-        AutoAlign.whileTrue(m_limelight.alignToTargetCommand());
+        //Limelight 1st is normal limelight w/out driving second is while driving
+        // AutoAlign.whileTrue(m_limelight.alignToTargetCommand()); 
+    //     AutoAlign.whileTrue(new AlignLimelight(
+    //     true, 
+    //     drivetrain, 
+    //     () -> -joystick.getLeftY() * MaxSpeed,  // Forward/Back Speed
+    //     () -> -joystick.getLeftX() * MaxSpeed   // Left/Right Speed
+    // ));
     }
 
     public Command getAutonomousCommand() {

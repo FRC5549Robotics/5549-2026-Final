@@ -26,6 +26,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
@@ -117,23 +118,25 @@ public class Limelight extends SubsystemBase {
   private final SwerveRequest.FieldCentric driveFieldCentric = new SwerveRequest.FieldCentric();
 
   public Command alignWhileDrivingCommand(DoubleSupplier xSpeed, DoubleSupplier ySpeed) {
-    return this.run(() -> {
+  // We use Commands.run so we can add the 'm_drivetrain' requirement.
+  // This ensures the default drive command stops while this is running.
+    return Commands.run(() -> {
       double rotSpeed = 0.0;
 
+    // Only calculate rotation if we see a target
       if (LimelightHelpers.getTV("limelight")) {
         double tx = LimelightHelpers.getTX("limelight");
-        rotSpeed = rotationController.calculate(tx);
+      // Calculate output to get tx to 0
+        rotSpeed = rotationController.calculate(tx, 0); 
       }
 
-      // We use setControl() with a FieldCentric request. 
-      // If we used driveRobotRelative here, forward on the joystick would 
-      // always be "Robot Forward", which gets confusing while the robot is spinning.
+    // driveFieldCentric is a raw request, so we apply the speeds directly.
       m_drivetrain.setControl(driveFieldCentric
-          .withVelocityX(xSpeed.getAsDouble())
-          .withVelocityY(ySpeed.getAsDouble())
-          .withRotationalRate(rotSpeed) // The auto-aim rotation
+        .withVelocityX(xSpeed.getAsDouble())
+        .withVelocityY(ySpeed.getAsDouble())
+        .withRotationalRate(rotSpeed) // The auto-aim rotation
       );
-    });
+    }, m_drivetrain, this); // REQUIREMENTS: Drivetrain + Limelight
   }
 
 
