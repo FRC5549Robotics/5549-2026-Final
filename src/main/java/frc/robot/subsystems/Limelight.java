@@ -94,7 +94,7 @@ public class Limelight extends SubsystemBase {
           LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
         }
 
-        DriverStation.reportWarning("Tag=" + tagID + " Pipeline=" + desiredPipeline, false);
+        //DriverStation.reportWarning("Tag=" + tagID + " Pipeline=" + desiredPipeline, false);
         
 
         // tx is the horizontal offset in degrees. 0 = centered.
