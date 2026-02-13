@@ -23,6 +23,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -31,12 +32,13 @@ import frc.robot.Constants;
 import frc.robot.Vision.LimelightHelpers;
 import frc.robot.Vision.LimelightHelpers.RawFiducial;
 
+
 public class Limelight extends SubsystemBase {
   /** Creates a new Limelight. */
   PhotonCamera camera;
   CommandSwerveDrivetrain m_drivetrain;
   CommandXboxController xbox_controller;
-  PIDController rotationController = new PIDController(0.1, 0, 0.001);
+  PIDController rotationController = new PIDController(0.08, 0, 0.001);
   PIDController translationController = new PIDController(2, 0, 0.002);
   NetworkTable limelightTable;
 
@@ -46,12 +48,55 @@ public class Limelight extends SubsystemBase {
     limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
   }
 
+  private int lastTag = -1;
+
   public Command alignToTargetCommand() {
+
     return this.run(() -> {
       double rotSpeed = 0.0;
       
       // Check if we see a target
       if (LimelightHelpers.getTV("limelight")) {
+
+        int tagID = (int) LimelightHelpers.getFiducialID("limelight");
+
+        int desiredPipeline = 0;
+
+        //if (tagID != lastTag) {
+
+        switch (tagID) {
+          // middle
+          case 5:
+          case 10:
+          case 2:
+          case 18:
+          case 26:
+          case 21:
+              desiredPipeline = 0;
+              break;
+          // right
+          case 8:
+          case 24:
+              desiredPipeline = 1;
+              break;
+          //left
+          case 9:
+          case 11:
+          case 25:
+          case 27:
+              desiredPipeline = 2;
+              break;
+        }
+
+        int currentPipeline = (int) LimelightHelpers.getCurrentPipelineIndex("limelight");
+
+        if (currentPipeline != desiredPipeline) {
+          LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
+        }
+
+        DriverStation.reportWarning("Tag=" + tagID + " Pipeline=" + desiredPipeline, false);
+        
+
         // tx is the horizontal offset in degrees. 0 = centered.
         double tx = LimelightHelpers.getTX("limelight");
         
