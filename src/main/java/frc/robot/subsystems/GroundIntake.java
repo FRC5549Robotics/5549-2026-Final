@@ -63,7 +63,7 @@ public class GroundIntake extends SubsystemBase {
         );
 
         SparkMaxConfig pivotConfig = new SparkMaxConfig();
-        pivotConfig.idleMode(IdleMode.kBrake);
+        pivotConfig.idleMode(IdleMode.kCoast);
         pivotMotor.configure(
             pivotConfig,
             com.revrobotics.ResetMode.kResetSafeParameters,
@@ -72,7 +72,7 @@ public class GroundIntake extends SubsystemBase {
 
         intakeMotor = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker");
         TalonFXConfiguration intakeConfig = new TalonFXConfiguration();
-        intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
         intakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         intakeMotor.getConfigurator().apply(intakeConfig);
@@ -164,12 +164,11 @@ public class GroundIntake extends SubsystemBase {
         SmartDashboard.putNumber("GI DIO Channel", Constants.PIVOT_ABS_ENC_DIO);
         SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected());
         SmartDashboard.putNumber("GI Enc Degrees", raw);
-        //SmartDashboard.putNumber("GI Enc Degrees", raw * 360.0);
         SmartDashboard.putBoolean("GI Enc Raw!=0", raw != 0.0);
         double currentPos = getPivotPosition();
         SmartDashboard.putNumber("Pivot Pos", currentPos);
         SmartDashboard.putNumber("Pivot Target", pivotTargetRotations);
-        SmartDashboard.putNumber("Up or down (up is 1, down is -1)", upOrDown);
+        //SmartDashboard.putNumber("Up or down (up is 1, down is -1)", upOrDown);
 
         
 

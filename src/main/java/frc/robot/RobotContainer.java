@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.AimAndSpinUpCommand;
 import frc.robot.commands.AlignLimelight;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -94,7 +95,10 @@ public class RobotContainer {
     private final LED m_Led = new LED();
     // private final Candle m_leds = new Candle();
 
-    
+    public Hood getHood() {
+        return m_hood;
+    }
+
     // AUTOCHOOSER SET UP
     private final SendableChooser<Command> autoChooser;
     public Command beltCommand(){
@@ -115,7 +119,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
         NamedCommands.registerCommand("PivotDown", new InstantCommand(m_pivot:: setPivotDown));
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
-        NamedCommands.registerCommand("Shoot1", new InstantCommand(m_shooter::shoot1));
+        NamedCommands.registerCommand("Shoot1", new InstantCommand(() -> m_shooter.shoot1(700), m_shooter));
         NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
         configureBindings();
     //     NamedCommands.registerpCommand("RunBelt", new InstantCommand(m_Belt::runBelt));
@@ -249,39 +253,38 @@ public class RobotContainer {
         //LIMELIGHT DRIVE LEFT BUMPER
         SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric();
 
-        joystick.leftBumper().whileTrue(
-            drivetrain.applyRequest(() -> {
-                double rotationOutput = 0;
-                double deadband = 0.1;
-                double translationX = MathUtil.applyDeadband(joystick.getLeftY(), deadband);
-                double translationY = MathUtil.applyDeadband(joystick.getLeftX(), deadband);
-        
-                // 2. Check if the Limelight sees a target (tv = 1)
-                boolean hasTarget = LimelightHelpers.getTV("limelight");
+        joystick.leftBumper()
+            .whileTrue(
+                new ParallelCommandGroup(
+                    drivetrain.applyRequest(() -> {
+                        double rotationOutput = 0;
+                        double deadband = 0.1;
 
-                if (hasTarget) {
-                double tx = LimelightHelpers.getTX("limelight");
-            
-            // 3. Calculate rotation using a simple P-controller.
-            // NOTE: If target is to the Right (+tx), we need to turn Clockwise (Negative Rotation).
-            // Therefore, we multiply by NEGATIVE kP.
-                double kP = 0.01; // Tune this value (start small, e.g., 0.05 or 0.1)
-                rotationOutput = tx * -kP * MaxAngularRate; 
-            
-            } else {
-            // 4. Fallback: If no target, give the driver manual rotation control
-                rotationOutput = -joystick.getRightX() * MaxAngularRate;
-            }
+                        double translationX = MathUtil.applyDeadband(joystick.getLeftY(), deadband);
+                        double translationY = MathUtil.applyDeadband(joystick.getLeftX(), deadband);
 
-        // 5. Apply the request with driver translation and calculated rotation
-            return aimRequest
-            // .withVelocityX(-joystick.getLeftY() * MaxSpeed)
-            // .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-            .withVelocityX(-translationX * MaxSpeed)
-            .withVelocityY(-translationY * MaxSpeed)
-            .withRotationalRate(rotationOutput);
-        })
-    );
+                        boolean hasTarget = LimelightHelpers.getTV("limelight");
+
+                        if (hasTarget) {
+                            double tx = LimelightHelpers.getTX("limelight");
+
+                            double kP = 0.01;
+                            rotationOutput = tx * -kP * MaxAngularRate;
+                        } else {
+                            rotationOutput = -joystick.getRightX() * MaxAngularRate;
+                        }
+
+                        return aimRequest
+                            .withVelocityX(-translationX * MaxSpeed)
+                            .withVelocityY(-translationY * MaxSpeed)
+                            .withRotationalRate(rotationOutput);
+                    }),
+                    new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood)
+                )
+            )
+            .onFalse(new InstantCommand(m_shooter::off, m_shooter));
+
+
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -321,9 +324,19 @@ public class RobotContainer {
         
         //Shooter 
         // m_controller2.axisGreaterThan(2, .7).whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter:: shoot1), new InstantCommand(m_Led:: setGreen))).onFalse(new ParallelCommandGroup(new InstantCommand(m_shooter::off), new InstantCommand(m_pivot::off)));
-        m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(m_shooter::shoot1)).onFalse(new InstantCommand(m_shooter::off));
-        m_controller2.leftBumper().whileTrue(new ParallelCommandGroup(new InstantCommand(m_shooter::shoot1), beltCommand(), new InstantCommand(m_Led:: setPink), drivetrain.applyRequest(() -> brake))).onFalse(new ParallelCommandGroup( new InstantCommand(m_shooter::off), new InstantCommand(m_belt::off), new InstantCommand(m_Led:: setGreen)));
-        
+        m_controller2.axisGreaterThan(2, .7).onTrue(new InstantCommand(() -> m_shooter.shoot1(700), m_shooter)).onFalse(new InstantCommand(m_shooter::off));
+        m_controller2.leftBumper().whileTrue(
+            new ParallelCommandGroup(
+                new InstantCommand(() -> m_shooter.shoot1(700), m_shooter),
+                beltCommand(),
+                new InstantCommand(m_Led:: setPink),
+                drivetrain.applyRequest(() -> brake)
+            )
+        ).onFalse(
+            new ParallelCommandGroup(
+                new InstantCommand(m_shooter::off), new InstantCommand(m_belt::off),
+                new InstantCommand(m_Led:: setGreen)));
+
         //Hood
         raiseHood.whileTrue(new RunCommand(m_hood:: HoodUp)).onFalse(new InstantCommand(m_hood:: HoodOff));
         lowerHood.whileTrue(new RunCommand(m_hood:: HoodDown)).onFalse(new InstantCommand(m_hood:: HoodOff));

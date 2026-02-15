@@ -202,6 +202,20 @@ public class Limelight extends SubsystemBase {
   //   return null;
   // }
   
+  public double getDistanceToTagMeters() {
+
+    if (!LimelightHelpers.getTV("limelight")) {
+        return -1;
+    }
+
+    var pose = LimelightHelpers.getTargetPose3d_CameraSpace("limelight");
+
+    double x = pose.getX();
+    double z = pose.getZ();
+
+    return Math.sqrt(x * x + z * z);
+  }
+
 
   @Override
   public void periodic() {
@@ -215,4 +229,6 @@ public class Limelight extends SubsystemBase {
     //   System.out.println(s[i]);
     // }
     // System.out.println(s[4]);
+
+    
   }}
