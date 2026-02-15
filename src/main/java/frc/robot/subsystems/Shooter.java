@@ -31,7 +31,7 @@ private final Follower rightFollower =
   // Units here are in VOLTS:
   // kS: volts, kV: volts per (rad/s), kA: volts per (rad/s^2)
   private final SimpleMotorFeedforward ff =
-      new SimpleMotorFeedforward(0.2, 0.12, 0.01);
+      new SimpleMotorFeedforward(0.252, 0.0208, 0.10);
 
   private boolean shooterEnabled = false;
   private double targetRPM = 0.0;
@@ -47,9 +47,9 @@ private final Follower rightFollower =
 
     // Optional: set some starting slot gains on the Talon itself (closed-loop velocity P/I/D).
     // These are NOT the same as your WPILib PID values.
-    cfg.Slot0.kP = 0.12;   // start small, tune
-    cfg.Slot0.kI = 0.0;
-    cfg.Slot0.kD = 0.0;
+    cfg.Slot0.kP = 0.05;  // start small, tune
+    cfg.Slot0.kI = 0.00;
+    cfg.Slot0.kD = 0.00;
 
     left.getConfigurator().apply(cfg);
     right.getConfigurator().apply(cfg);
@@ -106,5 +106,6 @@ private final Follower rightFollower =
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
     SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
     SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
+
   }
 }

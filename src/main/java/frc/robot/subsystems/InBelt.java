@@ -49,8 +49,8 @@ public class InBelt extends SubsystemBase{
 
     
     public void intake(){
-        belt.set(.9);
-        System.out.println("belting");
+        belt.set(.8);
+        //System.out.println("belting");
     }
     public void jammed(){
         belt.set(-.2);

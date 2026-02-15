@@ -279,10 +279,16 @@ public class RobotContainer {
                             .withVelocityY(-translationY * MaxSpeed)
                             .withRotationalRate(rotationOutput);
                     }),
-                    new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood)
+                    new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood),
+                    
+                    new InstantCommand(m_Led:: setGreen)
                 )
             )
-            .onFalse(new InstantCommand(m_shooter::off, m_shooter));
+            .onFalse(
+            new ParallelCommandGroup(
+                new InstantCommand(m_shooter::off, m_shooter),
+                new InstantCommand(m_Led:: setRed))
+            );
 
 
 
@@ -329,13 +335,13 @@ public class RobotContainer {
             new ParallelCommandGroup(
                 new InstantCommand(() -> m_shooter.shoot1(700), m_shooter),
                 beltCommand(),
-                new InstantCommand(m_Led:: setPink),
+                //new InstantCommand(m_Led:: setPink),
                 drivetrain.applyRequest(() -> brake)
             )
         ).onFalse(
             new ParallelCommandGroup(
                 new InstantCommand(m_shooter::off), new InstantCommand(m_belt::off),
-                new InstantCommand(m_Led:: setGreen)));
+                new InstantCommand(m_Led:: setRed)));
 
         //Hood
         raiseHood.whileTrue(new RunCommand(m_hood:: HoodUp)).onFalse(new InstantCommand(m_hood:: HoodOff));

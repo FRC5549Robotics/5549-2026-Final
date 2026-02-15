@@ -169,7 +169,7 @@ public final class Constants {
   //   public static final double ROT_SETPOINT_REEF_ALIGNMENT = 0.0;
   //   public static final double ROT_TOLERANCE_REEF_ALIGNMENT = 1.0;
     public static final double TRANSLATION_TOLERANCE = 0.03;
-    public static final double TX_TOLARANCE = 1.0;
+    public static final double TX_TOLARANCE = 0.5;
     // public static final double X_TOLERANCE_REEF_ALIGNMENT = 0.01;    
   //   public static final double Y_SETPOINT_RIGHT_REEF_ALIGNMENT = 0.0;
   //   public static final double Y_SETPOINT_LEFT_REEF_ALIGNMENT = 0.0;
@@ -184,7 +184,7 @@ public final class Constants {
     public static final double PIVOT_UP_POSITION = 0;
     public static final int GROUND_INTAKE_ID = 17;
     public static final double GROUND_PIVOT_SPEED = 0.15;
-    public static final int PIVOT_ABS_ENC_DIO = 5;
+    public static final int PIVOT_ABS_ENC_DIO = 4;
 
   //Belt Constants
     public static final int Belt_MOTOR_ID = 14;

@@ -31,9 +31,9 @@ public class AimAndSpinUpCommand extends Command {
 
         ShooterState shot = ShooterLookup.get(distance);
         //SmartDashboard.putNumber("Target Pos", shot.hoodAngleDeg);
-        SmartDashboard.putNumber("RPM", shot.flywheelRPM);
         hood.setAngle(shot.hoodAngleDeg);
         shooter.shoot1(shot.flywheelRPM);
+        SmartDashboard.putNumber("flywheelRPM", shot.flywheelRPM);
     }
 }
 

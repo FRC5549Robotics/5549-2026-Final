@@ -8,8 +8,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.MathUtil;
 
 public class Hood extends SubsystemBase{
+
+    private final PIDController hoodPID = new PIDController(0.25, 0.0, 0.001); // kP, kI, kD
+    private double hoodSetpoint = 72.0;
+    {
+        hoodPID.setTolerance(0.25);
+    }
 
     TalonFX HoodMotor;
     TalonFXConfiguration HoodMotorConfig;
@@ -62,40 +70,8 @@ public class Hood extends SubsystemBase{
     }
 
     public void setAngle(double targetPos) {
-
-        double currentPos = getHoodPosition();
-
-        SmartDashboard.putNumber("Current Pos", currentPos);
-
-        double error = targetPos - currentPos;
-
-        // ---- Tuning constants ----
-        double kP = 0.23; // how aggressive it moves
-        double maxSpeed = 0.25; // clamp so it doesn’t slam
-        double minSpeed = 0.05; // helps overcome friction
-        double tolerance = .6; // how close is "good enough"
-
-        // If we're close enough, stop
-        if (Math.abs(error) < tolerance) {
-            HoodMotor.set(0.0);
-            return;
-        }
-
-        // Proportional control
-        double speed = error * kP;
-
-        // Clamp speed so it behaves nicely
-        if (speed > maxSpeed) speed = maxSpeed;
-        if (speed < -maxSpeed) speed = -maxSpeed;
-
-        // Make sure we still move if very close
-        if (speed > 0 && speed < minSpeed) speed = minSpeed;
-        if (speed < 0 && speed > -minSpeed) speed = -minSpeed;
-
-        HoodMotor.set(speed);
-
-        SmartDashboard.putNumber("Hood Target", targetPos);
-        SmartDashboard.putNumber("Hood Error", error);
+        targetPos = MathUtil.clamp(targetPos, 69.0, 78.0);
+        hoodSetpoint = targetPos;
     }
     
     public void HoodOff() {
@@ -118,6 +94,22 @@ public class Hood extends SubsystemBase{
         return Math.abs(HoodMotor.getVelocity().getValueAsDouble()) < 0.05;
     }
 
+    @Override
+    public void periodic() {
+        double currentPos = getHoodPosition();
+
+        double output = hoodPID.calculate(currentPos, hoodSetpoint);
+        
+        output = MathUtil.clamp(output, -0.25, 0.25);
+
+        if (Math.abs(hoodSetpoint - currentPos) < 0.65) {
+            output = 0.0;
+        }
+
+        HoodMotor.set(output);
+
+        SmartDashboard.putNumber("Hood Target", hoodSetpoint);
+        SmartDashboard.putNumber("Hood Position", currentPos);
+        SmartDashboard.putNumber("Hood Output", output);
+    }
 }
-
-
