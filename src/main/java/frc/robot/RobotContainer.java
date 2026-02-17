@@ -6,8 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import javax.sound.sampled.Line;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -80,6 +78,8 @@ public class RobotContainer {
     private final LED m_LED = new LED();
     private final GameState gameState = new GameState();
 
+    private int lastPipeline = -1;
+
     public void updateGameState() {
         gameState.update();
     }
@@ -141,7 +141,10 @@ public class RobotContainer {
         );
 
         //LIMELIGHT DRIVE LEFT BUMPER
-        SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric();
+        SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * Constants.DRIVER_DEADBAND)
+            .withRotationalDeadband(MaxAngularRate * Constants.DRIVER_DEADBAND)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         //While left bumper is held down, aim towards april tag, set hood, & spin up shooter
         m_driver.leftBumper()
@@ -186,16 +189,15 @@ public class RobotContainer {
                                 break;
                             }
 
-                            int currentPipeline = (int) LimelightHelpers.getCurrentPipelineIndex("limelight");
-
-                            if (currentPipeline != desiredPipeline) {
-                            LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
+                            if (desiredPipeline != lastPipeline) {
+                                LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
+                                lastPipeline = desiredPipeline;
                             }
 
                             double tx = getFilteredTX();
 
                             double kP = Constants.AIM_kP;
-                            rotationOutput = tx * -kP * MaxAngularRate;
+                            rotationOutput = tx * -kP;
                         } else {
                             rotationOutput = -m_driver.getRightX() * MaxAngularRate;
                         }
@@ -308,8 +310,6 @@ public class RobotContainer {
     }
 
     public void periodic() {
-
-        gameState.update();
 
         boolean hubInactive = gameState.isHubInactiveNow();
         boolean lbHeld = m_driver.getHID().getLeftBumper();
