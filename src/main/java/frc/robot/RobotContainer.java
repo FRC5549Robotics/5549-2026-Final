@@ -209,12 +209,7 @@ public class RobotContainer {
                             .withVelocityY(-translationY * MaxSpeed)
                             .withRotationalRate(rotationOutput);
                     }),
-
-                    new RunCommand(() -> {
-                        if (LimelightHelpers.getTV("limelight")) {
-                            new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood);
-                        }
-                    })
+                    new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood)
                 )
             )
             //When left bumper is released, turn off shooter, LED's show no longer ready to shoot
