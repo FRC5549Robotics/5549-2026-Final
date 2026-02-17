@@ -1,176 +1,104 @@
 package frc.robot.subsystems;
 
-import javax.lang.model.util.ElementScanner14;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.DutyCycle;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import edu.wpi.first.wpilibj.Encoder;
+import com.ctre.phoenix6.controls.VoltageOut;
 
 public class GroundIntake extends SubsystemBase {
 
-    private final SparkMax pivotMotor;
-    //private final PIDController pivotPID;
+    private final SparkMax pivotMotor; // Create pivotMotor as a sparkMax device
+    private final TalonFX intakeMotor; //Create intakeMotor as a talonFX device
+    private final DutyCycleEncoder pivotAbsEncoder; //create pivotAbsEncoder as a DutyCycleEncoder
 
-    //private final SparkMax intakeMotor;
-    private final TalonFX intakeMotor;
-    //TalonFXConfiguration HoodMotorConfig;
+    private double pivotTargetPosition; //Create variable for where we want pivot to be
 
-    // Raw duty cycle input + decoded encoder (helps debug)
-    private final DutyCycleEncoder pivotAbsEncoder;
-    // tune these
-    private double pivotEncoderOffsetRot = 0.0;           // 0..1 rotations offset
-    private static final double ENC_TO_PIVOT_RATIO = 1.0; // gearing ratio if needed
-
-    // continuous unwrap state
-    //private double lastAdjAbsRot = 0.0;
-    //private double continuousRot = 0.0;
-    //private boolean absInit = false;
-
-    private double pivotTargetRotations;
-
-    // your existing setpoints (continuous rotations style)
+    //Maximum and minimum positions
     private final double PIVOT_UP_POSITION   = 145;
     private final double PIVOT_DOWN_POSITION = 268;
 
-    private boolean pivotEnabled = false;
-
-    private double upOrDown = 0;
-
+    private final VoltageOut voltageRequest = new VoltageOut(0);
 
     public GroundIntake() {
-        pivotMotor = new SparkMax(Constants.PIVOT_MOTOR_ID, MotorType.kBrushless);
+
+        pivotMotor = new SparkMax(Constants.PIVOT_MOTOR_ID, MotorType.kBrushless); //Further define pivotmotor
         pivotAbsEncoder = new DutyCycleEncoder(
-            Constants.PIVOT_ABS_ENC_DIO,
-            360.0,   // full range = 360 degrees per rotation
-            0.0      // zero position (can change later)
+            Constants.PIVOT_ABS_ENC_DIO, //DIO port
+            360.0,   // One rotation is 360
+            0.0      // How much to offset the encoder
 
         );
 
         SparkMaxConfig pivotConfig = new SparkMaxConfig();
-        pivotConfig.idleMode(IdleMode.kCoast);
+        pivotConfig.idleMode(IdleMode.kCoast); //set default mode to coast mode
         pivotMotor.configure(
             pivotConfig,
             com.revrobotics.ResetMode.kResetSafeParameters,
             com.revrobotics.PersistMode.kPersistParameters
         );
 
-        intakeMotor = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker");
+        intakeMotor = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker"); //Further define intakeMotor
         TalonFXConfiguration intakeConfig = new TalonFXConfiguration();
-        intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
+        intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; //set deault mode to coast mode
+        intakeConfig.CurrentLimits.StatorCurrentLimit = 60; //Intake current limit
         intakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         intakeMotor.getConfigurator().apply(intakeConfig);
-
-        // Through Bore PWM signal into RoboRIO DIO
-        
-        
-
-        //pivotPID = new PIDController(0.3, 0.0, 0.0);
-        //pivotPID.setTolerance(0.05);
-
-        pivotTargetRotations = 0.0;
     }
 
-    // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
-    // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
     public double getPivotPosition() {
-        //System.out.println(pivotTargetRotations);
-        // Returns absolute position in DEGREES (0–360)
-        return pivotAbsEncoder.get();
+        return pivotAbsEncoder.get(); //returns absolute encoder position
     }
 
     public void setPivotUp() {
-        //pivotPID.reset();
-        upOrDown = 1;
-        pivotTargetRotations = PIVOT_UP_POSITION;
-        pivotEnabled = true;
-        //intakeMotor.set(0.25);
-        System.out.println(getPivotPosition());
-        if (getPivotPosition() > 190) {
-            System.out.println("up");
-            pivotMotor.set(0.3);
+        pivotTargetPosition = PIVOT_UP_POSITION; //pivot wants to go to upper setpoint
+        if (getPivotPosition() > 190) { // if its not at max height then...
+            pivotMotor.set(0.3); // move it up
         } else {
-            pivotMotor.set(0.0);
+            pivotMotor.set(0.0); // if it is at max height, then stop
         }
-
     }
 
     public void setPivotDown() {
-        //pivotPID.reset();
-        upOrDown = -1;
-        pivotTargetRotations = PIVOT_DOWN_POSITION;
-        intakeMotor.set(0.32);
-        pivotEnabled = true;
-        System.out.println(getPivotPosition());
-        if (getPivotPosition() < 265) {
-            System.out.println("down");
-            pivotMotor.set(-0.3);
+        pivotTargetPosition = PIVOT_DOWN_POSITION; //pivot wants to go to lower setpoint
+        intakeMotor.setControl(voltageRequest.withOutput(4)); // turn intake motor on
+        if (getPivotPosition() < 265) { // if its not at min height then...
+            pivotMotor.set(-0.3); // send it down
         } else {
-            pivotMotor.set(0.0);
+            pivotMotor.set(0.0);  //if it is at min height, then stop
         }
     }
 
-    public void shooting() {
-        pivotEnabled = true;
-        //pivotPID.reset();
+    public void shooting() { //we run the intake up and down when we're shooting to push the balls in
+        double pos = getPivotPosition(); //get the pivot position
 
-        double pos = getPivotPosition();
-        
-        System.out.println(pos);
-
-        if (pos < 190) {
-            pivotMotor.set(-.2);
-        } else if (pos > 205) {
-            pivotMotor.set(.2);
+        if (pos < 190) { // if its less than 190...
+            pivotMotor.set(-.2); //move it down
+        } else if (pos > 205) { // if its more than 205...
+            pivotMotor.set(.2); //move it up
         }
     }
-
-    public void IntakeReverse() {
-        intakeMotor.set(0.3);
-    }
-
-    //public void IntakeOff() {
-        //intakeMotor.set(0.0);
-    //}
 
     public void off() {
-        pivotEnabled = false;
-        //System.out.println(pivotEnabled);
-        intakeMotor.set(0.0);
-        pivotMotor.set(0.0);
+        intakeMotor.set(0.0); //stop running intake
+        pivotMotor.set(0.0); //stop running pivot
     }
 
     @Override
     public void periodic() {
-        // ALWAYS push raw encoder debug so you can see if it's alive
-        double raw = pivotAbsEncoder.get();
 
-        SmartDashboard.putNumber("GI DIO Channel", Constants.PIVOT_ABS_ENC_DIO);
-        SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected());
-        SmartDashboard.putNumber("GI Enc Degrees", raw);
-        SmartDashboard.putBoolean("GI Enc Raw!=0", raw != 0.0);
-        double currentPos = getPivotPosition();
-        SmartDashboard.putNumber("Pivot Pos", currentPos);
-        SmartDashboard.putNumber("Pivot Target", pivotTargetRotations);
-        //SmartDashboard.putNumber("Up or down (up is 1, down is -1)", upOrDown);
+        double raw = pivotAbsEncoder.get(); //get encoder value
 
-        
+        SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected()); //Is the encoder connected?
+        SmartDashboard.putNumber("GI Enc Degrees", raw); //What is the encoder at?
+        SmartDashboard.putNumber("Pivot Target", pivotTargetPosition); //Where do we want the pivot to be?
 
     }
 }

@@ -8,17 +8,21 @@ import com.ctre.phoenix6.signals.StripTypeValue;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import frc.robot.subsystems.LEDState;
+
 public class LED extends SubsystemBase {
 
-    private final CANdle candle;
+    private final CANdle candle; //create candle
 
+    //define colors
     private static final RGBWColor GREEN = new RGBWColor(0, 255, 0, 0);
-    private static final RGBWColor Red = new RGBWColor(255, 0, 0, 0);
-    private static final RGBWColor Yellow = new RGBWColor(255, 255, 0, 0);
-    
+    private static final RGBWColor RED = new RGBWColor(255, 0, 0, 0);
+    private static final RGBWColor YELLOW = new RGBWColor(255, 255, 0, 0);
+
+    private LEDState currentState = null;
 
     public LED() {
-        candle = new CANdle(19, "lil clanker"); // CHANGE to your CAN ID
+        candle = new CANdle(19, "lil clanker"); // Further define candle
 
         // Configure CANdle
         CANdleConfiguration config = new CANdleConfiguration();
@@ -27,19 +31,31 @@ public class LED extends SubsystemBase {
 
         candle.getConfigurator().apply(config);
 
-        // Turn all LEDs solid green (0–399, adjust length as needed)
+        // Turn all LEDs solid green as their default state
         candle.setControl(
             new SolidColor(0, 399).withColor(GREEN)
         );
-    }
-    public void setGreen() {
-        candle.setControl( new SolidColor(0, 399).withColor(GREEN));
-    };
-    public void setRed(){
-        candle.setControl(new SolidColor(0, 399).withColor(Red));
+        currentState = LEDState.GREEN;
     }
 
-    public void setYellow() {
-        candle.setControl( new SolidColor(0, 399).withColor(Yellow));
-    };
+    public void setState(LEDState state) {
+
+        if (state == currentState) {
+            return;
+        }
+
+        currentState = state;
+
+        switch (state) {
+            case RED:
+                candle.setControl( new SolidColor(0, 399).withColor(RED));
+                break;
+            case YELLOW: 
+                candle.setControl( new SolidColor(0, 399).withColor(YELLOW));
+                break;
+            case GREEN: 
+                candle.setControl( new SolidColor(0, 399).withColor(GREEN));
+                break;
+        }
+    }
 }

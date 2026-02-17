@@ -23,7 +23,7 @@ public class ZeroHood extends Command {
 
     @Override
     public void execute() {
-        hood.hoodDownSlow();
+        hood.hoodDownInitial();
     }
 
     @Override

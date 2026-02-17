@@ -130,6 +130,11 @@ public final class Constants {
   public static final double kTurningD = 0.06;
   public static final double kAcceleration = 4;
 
+  public static final double AIM_kP = 0.015; //kP for autoAim
+
+  public static final double DRIVER_DEADBAND = 0.1; 
+  public static final double TRIGGER_DEADBAND = 0.7; 
+
   public static final int RESET_NAVX_BUTTON = 8;
 
   public static final Mode simMode = Mode.REAL;
@@ -147,17 +152,6 @@ public final class Constants {
     REPLAY
   }
     
-
-  //Shintake Constants
-    // public static final int INTAKE_MOTOR_LEFT = 33;
-    // public static final int INTAKE_MOTOR_RIGHT = 40;
-    // public static final int SHOOTER_INTAKE_BUTTON = 6;
-    // public static final double INTAKE_OUTTAKE_SPEED = 1;
-    // public static final double OUTTAKE_L1_SPEED = 0.4;
-    // public static final int SHINTAKE_BUTTON = 0;
-    public static final int INTAKE_TRIGGER = 3;
-    public static final int OUTTAKE_TRIGGER = 2;//RETURN TO OLD SETTING LATER
-
     //Intake Constants
     public static final int INTAKE_MOTOR = 17;
     public static final double INTAKE_SPEED = .65;
@@ -166,14 +160,8 @@ public final class Constants {
    
 
   // //Limelight Constants
-  //   public static final double ROT_SETPOINT_REEF_ALIGNMENT = 0.0;
-  //   public static final double ROT_TOLERANCE_REEF_ALIGNMENT = 1.0;
     public static final double TRANSLATION_TOLERANCE = 0.03;
     public static final double TX_TOLARANCE = 0.5;
-    // public static final double X_TOLERANCE_REEF_ALIGNMENT = 0.01;    
-  //   public static final double Y_SETPOINT_RIGHT_REEF_ALIGNMENT = 0.0;
-  //   public static final double Y_SETPOINT_LEFT_REEF_ALIGNMENT = 0.0;
-  //   public static final double Y_TOLERANCE_REEF_ALIGNMENT = 0.01;
 
   //Belt Constants
     public static final int BELT_MOTOR_ID = 18;
@@ -200,4 +188,6 @@ public final class Constants {
     public static final int HOOD_MOTOR_ID = 13;
     //CANdle
     public static final int CANDLE_ID = 19;
+
+
 } 
