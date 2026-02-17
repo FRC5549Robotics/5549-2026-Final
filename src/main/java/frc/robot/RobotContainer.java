@@ -15,8 +15,10 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.util.Units;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -53,7 +55,7 @@ public class RobotContainer {
     private final CommandXboxController m_operator = new CommandXboxController(Constants.OPERATOR_CONTROLLER); //create op controller
 
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private double MaxAngularRate = RotationsPerSecond.of(2).in(RadiansPerSecond); // 2 rotations per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -96,13 +98,13 @@ public class RobotContainer {
     }
 
     public Command intakeCommand(){
-        return new WaitCommand(2).andThen(() -> new RunCommand(m_pivot::shooting));
+        return new WaitCommand(2).andThen(() -> new RunCommand(m_pivot::shooting, m_pivot));
     }
 
     public double getFilteredTX() {
         if (!LimelightHelpers.getTV("limelight")) {
             txFilter.reset();
-            return 0.0;
+            return Double.NaN;
         }
 
         double rawTx = LimelightHelpers.getTX("limelight");
@@ -197,7 +199,7 @@ public class RobotContainer {
                             double tx = getFilteredTX();
 
                             double kP = Constants.AIM_kP;
-                            rotationOutput = tx * -kP;
+                            rotationOutput = Units.degreesToRadians(tx) * -kP;
                         } else {
                             rotationOutput = -m_driver.getRightX() * MaxAngularRate;
                         }
@@ -207,7 +209,12 @@ public class RobotContainer {
                             .withVelocityY(-translationY * MaxSpeed)
                             .withRotationalRate(rotationOutput);
                     }),
-                    new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood)
+
+                    new RunCommand(() -> {
+                        if (LimelightHelpers.getTV("limelight")) {
+                            new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood);
+                        }
+                    })
                 )
             )
             //When left bumper is released, turn off shooter, LED's show no longer ready to shoot
@@ -302,7 +309,7 @@ public class RobotContainer {
             return LEDState.YELLOW;
         }
 
-        if (Math.abs(tx) > 5 || !atSpeed) {
+        if (!Double.isFinite(tx) || Math.abs(tx) > 5 || !atSpeed) {
             return LEDState.YELLOW;
         }
 

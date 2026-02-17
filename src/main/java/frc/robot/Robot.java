@@ -15,6 +15,8 @@ import frc.robot.shooter.ShooterLookup;
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
+    private boolean hasZeroed = false;
+
     private final RobotContainer m_robotContainer;
 
     /* log and replay timestamp and joystick data */
@@ -39,7 +41,10 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        new ZeroHood(m_robotContainer.getHood()).schedule();
+        if (!hasZeroed) {
+            new ZeroHood(m_robotContainer.getHood()).schedule();
+            hasZeroed = true;
+        }
     }
 
     @Override
