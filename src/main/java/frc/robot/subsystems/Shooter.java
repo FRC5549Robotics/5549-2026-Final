@@ -25,7 +25,7 @@ public class Shooter extends SubsystemBase {
   //Tuned feedforward
   private final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0.252, 0.0208);
 
-  private double targetRPM = 600.0; //target rpm is 600 by default so robot idles at 600
+  private double targetRPM = 0.0; //target rpm is 600 by default so robot idles at 600
 
   public Shooter() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
@@ -52,7 +52,7 @@ public class Shooter extends SubsystemBase {
   }
 
   public void off() {
-    targetRPM = 600; //return to idle rpm
+    targetRPM = 0.0; //return to idle rpm
   }
 
   public boolean atSpeed() {

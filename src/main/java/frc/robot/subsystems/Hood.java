@@ -15,13 +15,13 @@ public class Hood extends SubsystemBase{
 
     //Create PID. kP is how fast the motor tries to close the error. kD is for adjusting speed based on how
     //quickly the error is decreasing. kI isn't necessary
-    private final PIDController hoodPID = new PIDController(0.25, 0.0, 0.001);
+    private final PIDController hoodPID = new PIDController(0.15, 0.0, 0.001);
 
-    private double hoodTarget; //create hoodTarget
+    private double hoodTarget = 69; //create hoodTarget
     private boolean PIDEnabled = false; //default to PID being off
 
     {
-        hoodPID.setTolerance(0.5); //Within what range should the PID stop
+        hoodPID.setTolerance(0.7); //Within what range should the PID stop
     }
 
     TalonFX HoodMotor; // create HoodMotor
@@ -44,6 +44,7 @@ public class Hood extends SubsystemBase{
     }
 
     public void setAngle(double targetPos) {
+        System.out.println(targetPos);
         targetPos = MathUtil.clamp(targetPos, 69.0, 78.0); //Range angles can be between
         hoodTarget = targetPos; //update hoodTarget to the new target
     }
@@ -53,6 +54,7 @@ public class Hood extends SubsystemBase{
     }
 
     public void stop() {
+        System.out.println("stop moving the hood");
         HoodMotor.set(0.0); //stop moving hood
     }
 
@@ -78,6 +80,7 @@ public class Hood extends SubsystemBase{
         }
 
         if (PIDEnabled == true) { //if the hood has been zeroed...
+            //System.out.println(output);
             HoodMotor.set(output); //move the hood
         }
 

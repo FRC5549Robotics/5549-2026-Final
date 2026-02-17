@@ -19,7 +19,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.util.Units;
-
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -55,7 +55,7 @@ public class RobotContainer {
     private final CommandXboxController m_operator = new CommandXboxController(Constants.OPERATOR_CONTROLLER); //create op controller
 
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(2).in(RadiansPerSecond); // 2 rotations per second max angular velocity
+    private double MaxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond); // 2 rotations per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -72,7 +72,7 @@ public class RobotContainer {
     POVButton lowerHood = new POVButton(m_operator.getHID(), 180);
     POVButton raiseHood = new POVButton(m_operator.getHID(), 0);
 
-    private final Limelight m_limelight = new Limelight();
+    private final Limelight m_limelight = new Limelight(drivetrain, m_driver);
     private final GroundIntake m_pivot = new GroundIntake();
     private final Belt m_belt = new Belt();
     private final Shooter m_shooter = new Shooter();
@@ -148,6 +148,9 @@ public class RobotContainer {
             .withRotationalDeadband(MaxAngularRate * Constants.DRIVER_DEADBAND)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+
+        
+            
         //While left bumper is held down, aim towards april tag, set hood, & spin up shooter
         m_driver.leftBumper()
             .whileTrue(
@@ -161,45 +164,11 @@ public class RobotContainer {
 
                         boolean hasTarget = LimelightHelpers.getTV("limelight");
                         //select correct pipeline for proper offsets
-                        if (hasTarget) {
-
-                            int tagID = (int) LimelightHelpers.getFiducialID("limelight");
-
-                            int desiredPipeline = 0;
-
-                            switch (tagID) {
-                            // middle
-                            case 5:
-                            case 10:
-                            case 2:
-                            case 18:
-                            case 26:
-                            case 21:
-                                desiredPipeline = 0;
-                                break;
-                            // right
-                            case 8:
-                            case 24:
-                                desiredPipeline = 1;
-                                break;
-                            //left
-                            case 9:
-                            case 11:
-                            case 25:
-                            case 27:
-                                desiredPipeline = 2;
-                                break;
-                            }
-
-                            if (desiredPipeline != lastPipeline) {
-                                LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
-                                lastPipeline = desiredPipeline;
-                            }
-
+                         if (hasTarget) {
                             double tx = getFilteredTX();
 
                             double kP = Constants.AIM_kP;
-                            rotationOutput = Units.degreesToRadians(tx) * -kP;
+                            rotationOutput = tx * -kP * MaxAngularRate;
                         } else {
                             rotationOutput = -m_driver.getRightX() * MaxAngularRate;
                         }
@@ -208,7 +177,7 @@ public class RobotContainer {
                             .withVelocityX(-translationX * MaxSpeed)
                             .withVelocityY(-translationY * MaxSpeed)
                             .withRotationalRate(rotationOutput);
-                    }),
+                        }),
                     new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood)
                 )
             )
@@ -275,18 +244,27 @@ public class RobotContainer {
             );
 
         //setpoint for shooting close to hub
-        m_operator.button(4).onTrue(
-            new ParallelCommandGroup(
-                new InstantCommand(() -> m_hood.setAngle(78.0), m_hood),
-                new InstantCommand(() -> m_shooter.shoot(1860), m_shooter)
+        m_operator.button(4)
+            .whileTrue(
+                new ParallelCommandGroup(
+                    new InstantCommand(() -> m_hood.setAngle(78.0), m_hood),
+                    new InstantCommand(() -> m_shooter.shoot(1860), m_shooter)
+                )
             )
+            .onFalse(
+                new InstantCommand(() -> m_shooter.off(), m_shooter)
         );
+
         //setpoint for passing
-        m_operator.button(1).onTrue(
-            new ParallelCommandGroup(
-                new InstantCommand(() -> m_hood.setAngle(69.0), m_hood),
-                new InstantCommand(() -> m_shooter.shoot(1200), m_shooter)
+        m_operator.button(1)
+            .whileTrue(
+                new ParallelCommandGroup(
+                    new InstantCommand(() -> m_hood.setAngle(69.0), m_hood),
+                    new InstantCommand(() -> m_shooter.shoot(1200), m_shooter)
+                )
             )
+            .onFalse(
+                new InstantCommand(() -> m_shooter.off(), m_shooter)
         );
     }
 

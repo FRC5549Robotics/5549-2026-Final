@@ -41,10 +41,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        if (!hasZeroed) {
-            new ZeroHood(m_robotContainer.getHood()).schedule();
-            hasZeroed = true;
-        }
     }
 
     @Override
@@ -70,6 +66,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
+
+        new ZeroHood(m_robotContainer.getHood()).schedule();
+
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
