@@ -13,10 +13,12 @@ import edu.wpi.first.math.MathUtil;
 
 public class Hood extends SubsystemBase{
 
+    private boolean PIDEnabled = false; //default to PID being off
+
     private final PIDController hoodPID = new PIDController(0.25, 0.0, 0.001); // kP, kI, kD
     private double hoodSetpoint = 72.0;
     {
-        hoodPID.setTolerance(0.25);
+        hoodPID.setTolerance(0.4);
     }
 
     TalonFX HoodMotor;
@@ -88,6 +90,7 @@ public class Hood extends SubsystemBase{
 
     public void zeroEncoder() {
         HoodMotor.setPosition(0);
+        PIDEnabled = true; //allow PID to move the hood
     }
 
     public boolean atBottom() {
@@ -106,7 +109,9 @@ public class Hood extends SubsystemBase{
             output = 0.0;
         }
 
-        HoodMotor.set(output);
+        if (PIDEnabled == true) { //if the hood has been zeroed...
+            HoodMotor.set(output); //move the hood
+        }
 
         SmartDashboard.putNumber("Hood Target", hoodSetpoint);
         SmartDashboard.putNumber("Hood Position", currentPos);

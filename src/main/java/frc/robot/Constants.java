@@ -135,6 +135,11 @@ public final class Constants {
   public static final Mode simMode = Mode.REAL;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+  public static final double AIM_kP = 0.015; //kP for autoAim
+
+  public static final double DRIVER_DEADBAND = 0.1; 
+  public static final double TRIGGER_DEADBAND = 0.7; 
+
 
   public static enum Mode {
     /** Running on a real robot. */
@@ -187,7 +192,8 @@ public final class Constants {
     public static final int PIVOT_ABS_ENC_DIO = 4;
 
   //Belt Constants
-    public static final int Belt_MOTOR_ID = 14;
+    public static final int BELT_RIGHT_MOTOR_ID = 14;
+    public static final int BELT_LEFT_MOTOR_ID = 19;
     //CanRange
     //public static final int CANRANGE_ID = 20;
 
@@ -195,6 +201,7 @@ public final class Constants {
     //Shooter constants
     public static final int LEFT_MOTOR_ID = 15;
     public static final int RIGHT_MOTOR_ID = 16;
+    public static final int MIDDLE_MOTOR_ID = 20;
 
     //HOOD constants
     public static final int HOOD_MOTOR_ID = 13;

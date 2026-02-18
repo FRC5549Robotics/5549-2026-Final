@@ -133,10 +133,9 @@ public class GroundIntake extends SubsystemBase {
         double pos = getPivotPosition();
         
         System.out.println(pos);
-
-        if (pos < 190) {
-            pivotMotor.set(-.2);
-        } else if (pos > 205) {
+        if (pos < 200) {
+            pivotMotor.set(-.2); //go down
+        } else if (pos > 215) {
             pivotMotor.set(.2);
         }
     }

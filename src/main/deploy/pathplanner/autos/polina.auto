@@ -5,68 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "sequential",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "PivotDown"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 5.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "PivotUp"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "RunBelt"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot1"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 8.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "OffBelt"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ShootOff"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Example Path"

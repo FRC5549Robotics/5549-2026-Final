@@ -19,14 +19,15 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 public class Shooter extends SubsystemBase {
   private final TalonFX left = new TalonFX(Constants.LEFT_MOTOR_ID, "lil clanker");
   private final TalonFX right = new TalonFX(Constants.RIGHT_MOTOR_ID, "lil clanker");
+  private final TalonFX middle = new TalonFX(Constants.MIDDLE_MOTOR_ID, "lil clanker");
 
   // Phoenix 6 request object (reuse it; don’t new it every loop)
   private final VelocityVoltage leftVelReq = new VelocityVoltage(0);
 
   // Right follows left. Set invert = true/false depending on your gearbox mounting.
   
-private final Follower rightFollower =
-    new Follower(Constants.LEFT_MOTOR_ID, MotorAlignmentValue.Opposed);
+  private final Follower rightFollower = new Follower(Constants.LEFT_MOTOR_ID, MotorAlignmentValue.Opposed);
+  private final Follower middleFollower = new Follower(Constants.LEFT_MOTOR_ID, MotorAlignmentValue.Opposed);
      // Tune these from SysId or manual tuning
   // Units here are in VOLTS:
   // kS: volts, kV: volts per (rad/s), kA: volts per (rad/s^2)
@@ -56,6 +57,7 @@ private final Follower rightFollower =
 
     // Make the right motor follow left
     right.setControl(rightFollower);
+    middle.setControl(middleFollower);
   }
 
   // Call this to spin up to a speed
@@ -64,7 +66,7 @@ private final Follower rightFollower =
     // shooterEnabled = rpm > 0.0;
   }
 
-  public void shoot1(double rpm) {
+  public void shoot(double rpm) {
     System.out.println("shooting");
     setShooterRPM(rpm); 
     shooterEnabled = true;
@@ -75,6 +77,14 @@ private final Follower rightFollower =
     targetRPM = 0.0;
     left.set(0);
     right.set(0);
+  }
+
+  public boolean atSpeed() {
+    double currentRPM = left.getVelocity().getValueAsDouble() * 60;
+    if (targetRPM == 0.0) {
+      return false;
+    }
+    return Math.abs(currentRPM - targetRPM) < 500; //Is flywheel rpm within tolerance?
   }
 
   @Override
@@ -102,6 +112,7 @@ private final Follower rightFollower =
             .withVelocity(targetRPS)     // RPS
             .withFeedForward(ffVolts)    // volts
     );
+    
 
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
     SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
