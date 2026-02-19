@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.hardware.CANdle;
@@ -12,6 +14,8 @@ import frc.robot.subsystems.LEDState;
 
 public class LED extends SubsystemBase {
 
+    private Supplier<LEDState> stateSupplier;
+
     private final CANdle candle; //create candle
 
     //define colors
@@ -20,6 +24,10 @@ public class LED extends SubsystemBase {
     private static final RGBWColor YELLOW = new RGBWColor(255, 255, 0, 0);
 
     private LEDState currentState = null;
+
+    public void setStateSupplier(Supplier<LEDState> supplier) {
+        this.stateSupplier = supplier;
+    }
 
     public LED() {
         candle = new CANdle(19, "lil clanker"); // Further define candle
@@ -56,6 +64,12 @@ public class LED extends SubsystemBase {
             case GREEN: 
                 candle.setControl( new SolidColor(0, 399).withColor(GREEN));
                 break;
+        }
+    }
+
+    public void periodic() {
+        if (stateSupplier != null) {
+            setState(stateSupplier.get());
         }
     }
 }

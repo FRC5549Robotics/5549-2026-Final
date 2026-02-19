@@ -142,6 +142,18 @@ public class RobotContainer {
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
         NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(700), m_shooter));
         NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
+
+        m_LED.setStateSupplier(() -> {
+
+        boolean hubInactive = gameState.isHubInactiveNow();
+        boolean lbHeld = m_driver.getHID().getLeftBumper();
+        double tx = getFilteredTX();
+        boolean atSpeed = m_shooter.atSpeed();
+
+        return computeLEDState(hubInactive, lbHeld, tx, atSpeed);
+        
+        });
+
         configureBindings();
     }
     
@@ -347,19 +359,6 @@ public class RobotContainer {
          }
 
          return LEDState.GREEN;
-    }
-
-    public void periodic() {
-
-        boolean hubInactive = gameState.isHubInactiveNow();
-        boolean lbHeld = m_driver.getHID().getLeftBumper();
-        double tx = getFilteredTX();
-        boolean atSpeed = m_shooter.atSpeed();
-
-        LEDState state = computeLEDState(hubInactive, lbHeld, tx, atSpeed);
-
-        m_LED.setState(state);
-        
     }
 
 
