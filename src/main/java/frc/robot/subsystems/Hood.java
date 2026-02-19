@@ -16,7 +16,7 @@ import edu.wpi.first.math.MathUtil;
 public class Hood extends SubsystemBase{
 
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
-    private final TorqueCurrentFOC homingRequest = new TorqueCurrentFOC(-8);
+    private final TorqueCurrentFOC homingRequest = new TorqueCurrentFOC(-25);
 
     private double hoodTarget;
 
@@ -79,7 +79,8 @@ public class Hood extends SubsystemBase{
     }
 
     public boolean atBottom() {
-        return Math.abs(HoodMotor.getStatorCurrent().getValueAsDouble()) > 20;
+        System.out.println(HoodMotor.getVelocity().getValueAsDouble());
+        return Math.abs(HoodMotor.getVelocity().getValueAsDouble()) < 0.05; //if the motor slows down enough, return that it's hit the hard stop
     }
 
     @Override
