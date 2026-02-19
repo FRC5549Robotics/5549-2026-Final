@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 import frc.robot.subsystems.GroundIntake;
 import frc.robot.subsystems.Hood;
@@ -123,11 +124,11 @@ public class RobotContainer {
     // AUTOCHOOSER SET UP
     private final SendableChooser<Command> autoChooser;
     public Command beltCommand(){
-        return new WaitCommand(1.5).andThen(() -> m_belt.intake());
+        return new WaitCommand(0.5).andThen(() -> m_belt.intake());
     }
 
     public Command intakeCommand(){
-        return new WaitCommand(2).andThen(() -> new RunCommand(m_pivot::shooting));
+        return new WaitCommand(1.5).andThen(() -> new RunCommand(m_pivot::shooting));
     }
     public RobotContainer() {
         drivetrain.configurePathPlanner();  
@@ -137,20 +138,30 @@ public class RobotContainer {
         
         SmartDashboard.putData("Auto Chooser", autoChooser);
         NamedCommands.registerCommand("RunBelt", new InstantCommand(m_belt::intake));
+        NamedCommands.registerCommand("WaitAndBelt", beltCommand());
+        NamedCommands.registerCommand("WaitAndIntakeUpDown", intakeCommand());
         NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
         NamedCommands.registerCommand("PivotDown", new InstantCommand(m_pivot:: setPivotDown));
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
         NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(700), m_shooter));
         NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
+        NamedCommands.registerCommand("HoodTo78", new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
+
+
 
         m_LED.setStateSupplier(() -> {
 
-        boolean hubInactive = gameState.isHubInactiveNow();
-        boolean lbHeld = m_driver.getHID().getLeftBumper();
-        double tx = getFilteredTX();
-        boolean atSpeed = m_shooter.atSpeed();
+            boolean hubInactive = gameState.isHubInactiveNow();
+            boolean lbHeld = m_driver.getHID().getLeftBumper();
+            double tx = getFilteredTX();
+            boolean atSpeed = m_shooter.atSpeed();
 
-        return computeLEDState(hubInactive, lbHeld, tx, atSpeed);
+            SmartDashboard.putBoolean("Hub Inactive", hubInactive);
+            SmartDashboard.putBoolean("LB Held", lbHeld);
+            SmartDashboard.putNumber("Limelight TX", tx);
+            SmartDashboard.putBoolean("Shooter At Speed", atSpeed);
+
+            return computeLEDState(hubInactive, lbHeld, tx, atSpeed);
         
         });
 
@@ -316,15 +327,19 @@ public class RobotContainer {
             );
 
         //setpoint for shooting close to hub
-        m_operator.button(4)
-            .whileTrue(
-                new ParallelCommandGroup(
-                    new InstantCommand(() -> m_hood.setAngle(78.0), m_hood),
-                    new InstantCommand(() -> m_shooter.shoot(1860), m_shooter)
-                )
+        m_operator.button(4).onTrue(
+            new SequentialCommandGroup(
+
+                new InstantCommand(() -> {
+                    m_hood.setAngle(78.0);
+                    m_shooter.shoot(1860);
+                }, m_hood, m_shooter),
+                
+            new WaitUntilCommand(m_hood::atTarget)
             )
-            .onFalse(
-                new InstantCommand(() -> m_shooter.off(), m_shooter)
+        )
+        .onFalse(
+            new InstantCommand(() -> m_shooter.off(), m_shooter)
         );
 
         //setpoint for passing
@@ -340,7 +355,7 @@ public class RobotContainer {
         );
     }
 
-     public LEDState computeLEDState(
+    public LEDState computeLEDState(
         boolean hubInactive,
         boolean lbHeld,
         double tx,
@@ -351,11 +366,11 @@ public class RobotContainer {
         }
 
         if (!lbHeld) {
-            return LEDState.YELLOW;
+            return LEDState.BLUE;
         }
 
         if (!Double.isFinite(tx) || Math.abs(tx) > 5 || !atSpeed) {
-            return LEDState.YELLOW;
+            return LEDState.BLUE;
          }
 
          return LEDState.GREEN;
@@ -365,7 +380,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
 
         System.out.println("getAutonomousCommand");
-        return new PathPlannerAuto("polina");
+        return new PathPlannerAuto("maybe center sprint left");
     
         // // Simple drive forward auton
         // final var idle = new SwerveRequest.Idle();

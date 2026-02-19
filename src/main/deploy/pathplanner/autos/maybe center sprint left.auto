@@ -13,82 +13,70 @@
                 "data": {
                   "pathName": "centersprintledt"
                 }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.75
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "PivotDown"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 3.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "PivotUp"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 4.7
+                      }
+                    },
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "InDaHood"
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "RunBelt"
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "shoot"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
               }
             ]
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": [
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 1.75
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "PivotDown"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 3.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "PivotUp"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 4.7
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "RunBelt"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "shoot"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 10.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "OffBelt"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ShootOff"
           }
         }
       ]

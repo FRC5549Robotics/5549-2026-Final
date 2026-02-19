@@ -12,6 +12,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.subsystems.LEDState;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class LED extends SubsystemBase {
 
     private Supplier<LEDState> stateSupplier;
@@ -21,7 +23,7 @@ public class LED extends SubsystemBase {
     //define colors
     private static final RGBWColor GREEN = new RGBWColor(0, 255, 0, 0);
     private static final RGBWColor RED = new RGBWColor(255, 0, 0, 0);
-    private static final RGBWColor YELLOW = new RGBWColor(255, 255, 0, 0);
+    private static final RGBWColor BLUE = new RGBWColor(0, 0, 255, 0);
 
     private LEDState currentState = null;
 
@@ -58,8 +60,8 @@ public class LED extends SubsystemBase {
             case RED:
                 candle.setControl( new SolidColor(0, 399).withColor(RED));
                 break;
-            case YELLOW: 
-                candle.setControl( new SolidColor(0, 399).withColor(YELLOW));
+            case BLUE: 
+                candle.setControl( new SolidColor(0, 399).withColor(BLUE));
                 break;
             case GREEN: 
                 candle.setControl( new SolidColor(0, 399).withColor(GREEN));
@@ -72,5 +74,7 @@ public class LED extends SubsystemBase {
         if (stateSupplier != null) {
             setState(stateSupplier.get());
         }
+
+        SmartDashboard.putString("LED State", currentState.name());
     }
 }

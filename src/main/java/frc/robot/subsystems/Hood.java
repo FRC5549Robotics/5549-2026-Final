@@ -6,6 +6,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.NeutralOut;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -63,7 +64,13 @@ public class Hood extends SubsystemBase{
         hoodTarget = targetDeg;
 
         double motorRot = degreesToMotorRot(targetDeg);
+
         HoodMotor.setControl(positionRequest.withPosition(motorRot));
+    }
+
+    public boolean atTarget() {
+        double error = HoodMotor.getClosedLoopError().getValueAsDouble();
+        return Math.abs(error) < 1;
     }
 
     public void hoodDownSlow() {
@@ -72,6 +79,7 @@ public class Hood extends SubsystemBase{
 
     public void stop() {
         HoodMotor.setControl(positionRequest.withPosition(HoodMotor.getPosition().getValueAsDouble()));
+        System.out.println("hood motor stop() ran");
     }
 
     public void zeroEncoder() {
@@ -86,6 +94,10 @@ public class Hood extends SubsystemBase{
     @Override
     public void periodic() {
         double currentPos = getHoodPosition();
+
+        if (atTarget()) {
+            HoodMotor.setControl(new NeutralOut());
+        }
 
         SmartDashboard.putNumber("Hood Target", hoodTarget);
         SmartDashboard.putNumber("Hood Position", currentPos);
