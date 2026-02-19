@@ -1,46 +1,23 @@
 package frc.robot.subsystems;
 
-import javax.lang.model.util.ElementScanner14;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.DutyCycle;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import edu.wpi.first.wpilibj.Encoder;
 
 public class GroundIntake extends SubsystemBase {
 
     private final SparkMax pivotMotor;
-    //private final PIDController pivotPID;
-
-    //private final SparkMax intakeMotor;
     private final TalonFX intakeMotor;
-    //TalonFXConfiguration HoodMotorConfig;
-
-    // Raw duty cycle input + decoded encoder (helps debug)
     private final DutyCycleEncoder pivotAbsEncoder;
-    // tune these
-    private double pivotEncoderOffsetRot = 0.0;           // 0..1 rotations offset
-    private static final double ENC_TO_PIVOT_RATIO = 1.0; // gearing ratio if needed
-
-    // continuous unwrap state
-    //private double lastAdjAbsRot = 0.0;
-    //private double continuousRot = 0.0;
-    //private boolean absInit = false;
 
     private double pivotTargetRotations;
 
@@ -48,10 +25,7 @@ public class GroundIntake extends SubsystemBase {
     private final double PIVOT_UP_POSITION   = 145;
     private final double PIVOT_DOWN_POSITION = 268;
 
-    private boolean pivotEnabled = false;
-
-    private double upOrDown = 0;
-
+    private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
 
     public GroundIntake() {
         pivotMotor = new SparkMax(Constants.PIVOT_MOTOR_ID, MotorType.kBrushless);
@@ -73,18 +47,16 @@ public class GroundIntake extends SubsystemBase {
         intakeMotor = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker");
         TalonFXConfiguration intakeConfig = new TalonFXConfiguration();
         intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+
         intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
         intakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        intakeConfig.CurrentLimits.SupplyCurrentLimit = 35;
+        intakeConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+        intakeConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.08; //0.08s to reach max voltage
+
         intakeMotor.getConfigurator().apply(intakeConfig);
 
-        // Through Bore PWM signal into RoboRIO DIO
-        
-        
-
-        //pivotPID = new PIDController(0.3, 0.0, 0.0);
-        //pivotPID.setTolerance(0.05);
-
-        pivotTargetRotations = 0.0;
     }
 
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
@@ -96,30 +68,16 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void setPivotUp() {
-        //pivotPID.reset();
-        upOrDown = 1;
-        pivotTargetRotations = PIVOT_UP_POSITION;
-        pivotEnabled = true;
-        //intakeMotor.set(0.25);
-        System.out.println(getPivotPosition());
         if (getPivotPosition() > 190) {
-            System.out.println("up");
             pivotMotor.set(0.3);
         } else {
             pivotMotor.set(0.0);
         }
-
     }
 
     public void setPivotDown() {
-        //pivotPID.reset();
-        upOrDown = -1;
-        pivotTargetRotations = PIVOT_DOWN_POSITION;
-        intakeMotor.set(0.32);
-        pivotEnabled = true;
-        System.out.println(getPivotPosition());
+        intakeMotor.setControl(voltageRequest.withOutput(0.32));
         if (getPivotPosition() < 265) {
-            System.out.println("down");
             pivotMotor.set(-0.3);
         } else {
             pivotMotor.set(0.0);
@@ -127,9 +85,6 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void shooting() {
-        pivotEnabled = true;
-        //pivotPID.reset();
-
         double pos = getPivotPosition();
         
         System.out.println(pos);
@@ -144,12 +99,7 @@ public class GroundIntake extends SubsystemBase {
         intakeMotor.set(0.3);
     }
 
-    //public void IntakeOff() {
-        //intakeMotor.set(0.0);
-    //}
-
     public void off() {
-        pivotEnabled = false;
         //System.out.println(pivotEnabled);
         intakeMotor.set(0.0);
         pivotMotor.set(0.0);
@@ -163,13 +113,6 @@ public class GroundIntake extends SubsystemBase {
         SmartDashboard.putNumber("GI DIO Channel", Constants.PIVOT_ABS_ENC_DIO);
         SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected());
         SmartDashboard.putNumber("GI Enc Degrees", raw);
-        SmartDashboard.putBoolean("GI Enc Raw!=0", raw != 0.0);
-        double currentPos = getPivotPosition();
-        SmartDashboard.putNumber("Pivot Pos", currentPos);
-        SmartDashboard.putNumber("Pivot Target", pivotTargetRotations);
-        //SmartDashboard.putNumber("Up or down (up is 1, down is -1)", upOrDown);
-
-        
 
     }
 }

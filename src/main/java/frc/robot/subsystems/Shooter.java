@@ -22,7 +22,7 @@ public class Shooter extends SubsystemBase {
   private final TalonFX middle = new TalonFX(Constants.MIDDLE_MOTOR_ID, "lil clanker");
 
   // Phoenix 6 request object (reuse it; don’t new it every loop)
-  private final VelocityVoltage leftVelReq = new VelocityVoltage(0);
+  private final VelocityVoltage leftVelReq = new VelocityVoltage(0).withEnableFOC(true);
 
   // Right follows left. Set invert = true/false depending on your gearbox mounting.
   
@@ -42,6 +42,8 @@ public class Shooter extends SubsystemBase {
 
     cfg.CurrentLimits.StatorCurrentLimit = 120;
     cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+    cfg.CurrentLimits.SupplyCurrentLimit = 50;
+    cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Flywheels usually feel better on COAST, not BRAKE.
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -51,6 +53,8 @@ public class Shooter extends SubsystemBase {
     cfg.Slot0.kP = 0.05;  // start small, tune
     cfg.Slot0.kI = 0.00;
     cfg.Slot0.kD = 0.00;
+
+    cfg.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.05; //0.05 seconds to reach max velocity
 
     left.getConfigurator().apply(cfg);
     right.getConfigurator().apply(cfg);
