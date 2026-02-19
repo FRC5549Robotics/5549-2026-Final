@@ -38,7 +38,7 @@ public class Hood extends SubsystemBase{
         HoodMotorConfig.Slot0.kP = 20;
         HoodMotorConfig.Slot0.kI = 0;
         HoodMotorConfig.Slot0.kD = 0.2;
-        HoodMotorConfig.Slot0.kG = 0.35; //some gravity PID thing
+        HoodMotorConfig.Slot0.kG = 0; //Gravity PID
         HoodMotorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
         HoodMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.05;
@@ -70,7 +70,7 @@ public class Hood extends SubsystemBase{
 
     public boolean atTarget() {
         double error = HoodMotor.getClosedLoopError().getValueAsDouble();
-        return Math.abs(error) < 1;
+        return Math.abs(error) < 0.1;
     }
 
     public void hoodDownSlow() {
@@ -87,17 +87,12 @@ public class Hood extends SubsystemBase{
     }
 
     public boolean atBottom() {
-        System.out.println(HoodMotor.getVelocity().getValueAsDouble());
         return Math.abs(HoodMotor.getVelocity().getValueAsDouble()) < 0.05; //if the motor slows down enough, return that it's hit the hard stop
     }
 
     @Override
     public void periodic() {
         double currentPos = getHoodPosition();
-
-        if (atTarget()) {
-            HoodMotor.setControl(new NeutralOut());
-        }
 
         SmartDashboard.putNumber("Hood Target", hoodTarget);
         SmartDashboard.putNumber("Hood Position", currentPos);

@@ -327,33 +327,20 @@ public class RobotContainer {
             );
 
         //setpoint for shooting close to hub
-        m_operator.button(4).onTrue(
-            new SequentialCommandGroup(
+        m_operator.button(4).onTrue(new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
 
-                new InstantCommand(() -> {
-                    m_hood.setAngle(78.0);
-                    m_shooter.shoot(1860);
-                }, m_hood, m_shooter),
-                
-            new WaitUntilCommand(m_hood::atTarget)
-            )
-        )
-        .onFalse(
-            new InstantCommand(() -> m_shooter.off(), m_shooter)
-        );
+        m_operator.button(4).whileTrue(new RunCommand(() -> m_shooter.shoot(1860), m_shooter));
+        
+        m_operator.button(4).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
         //setpoint for passing
-        m_operator.button(1)
-            .whileTrue(
-                new ParallelCommandGroup(
-                    new InstantCommand(() -> m_hood.setAngle(69.0), m_hood),
-                    new InstantCommand(() -> m_shooter.shoot(1200), m_shooter)
-                )
-            )
-            .onFalse(
-                new InstantCommand(() -> m_shooter.off(), m_shooter)
-        );
+        m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
+
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1200), m_shooter));
+        
+        m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
     }
+
 
     public LEDState computeLEDState(
         boolean hubInactive,
