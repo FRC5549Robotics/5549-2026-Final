@@ -67,6 +67,7 @@ public class LED extends SubsystemBase {
         }
     }
 
+    @Override
     public void periodic() {
         if (stateSupplier != null) {
             setState(stateSupplier.get());
