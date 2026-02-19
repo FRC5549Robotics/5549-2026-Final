@@ -3,7 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
@@ -38,13 +38,14 @@ public class Hood extends SubsystemBase{
         HoodMotorConfig.Slot0.kI = 0;
         HoodMotorConfig.Slot0.kD = 0.2;
         HoodMotorConfig.Slot0.kG = 0.35; //some gravity PID thing
+        HoodMotorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
         HoodMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.05;
 
-        HoodMotor.getConfigurator().apply(HoodMotorConfig);
-
         HoodMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 4; // cap on velocity
         HoodMotorConfig.MotionMagic.MotionMagicAcceleration = 8; // cap on acceleration
+
+        HoodMotor.getConfigurator().apply(HoodMotorConfig);
     }
 
     private double degreesToMotorRot(double deg) {
@@ -53,7 +54,7 @@ public class Hood extends SubsystemBase{
 
     public double getHoodPosition() {
         double pos = HoodMotor.getPosition().getValueAsDouble();
-        pos = pos/5*(184/11) + 67.35; //switch to degrees, just trust, don't change
+        pos = pos/5*(184.0/11.0) + 67.35; //switch to degrees, just trust, don't change
         return pos;
     }
 
