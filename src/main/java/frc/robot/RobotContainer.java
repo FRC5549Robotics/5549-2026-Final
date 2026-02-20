@@ -11,13 +11,13 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AimAndSpinUpCommand;
 import frc.robot.commands.AlignLimelight;
+import frc.robot.commands.AutoAlignAndAimAndSpinUp;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -149,9 +149,15 @@ public class RobotContainer {
             ).withTimeout(2.0) //how long to run it
         );
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
-        NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(700), m_shooter));
+        NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(1800), m_shooter));
         NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
         NamedCommands.registerCommand("HoodTo78", new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
+        NamedCommands.registerCommand("AimAndSpinUp", new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood));
+        NamedCommands.registerCommand(
+            "AutoAlign",
+            new AutoAlignAndAimAndSpinUp(drivetrain, m_limelight, m_shooter, m_hood)
+                .withTimeout(0.5)
+        );
 
         m_LED.setStateSupplier(() -> {
 
