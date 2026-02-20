@@ -154,9 +154,9 @@ public class RobotContainer {
         NamedCommands.registerCommand("HoodTo78", new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
         NamedCommands.registerCommand("AimAndSpinUp", new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood));
         NamedCommands.registerCommand(
-            "AutoAlign",
-            new MegaShootCommand(drivetrain, m_limelight, m_shooter, m_hood)
-                .withTimeout(1.5)
+            "MegaShootCommand",
+            new MegaShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
+                .withTimeout(3.0)
         );
 
         m_LED.setStateSupplier(() -> {
