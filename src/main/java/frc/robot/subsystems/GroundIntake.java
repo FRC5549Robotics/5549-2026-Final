@@ -69,7 +69,7 @@ public class GroundIntake extends SubsystemBase {
 
     public void setPivotUp() {
         if (getPivotPosition() > 190) {
-            pivotMotor.set(0.3);
+            pivotMotor.set(0.4);
         } else {
             pivotMotor.set(0.0);
         }
@@ -78,7 +78,7 @@ public class GroundIntake extends SubsystemBase {
     public void setPivotDown() {
         intakeMotor.setControl(voltageRequest.withOutput(4.5));
         if (getPivotPosition() < 265) {
-            pivotMotor.set(-0.3);
+            pivotMotor.set(-0.4);
         } else {
             pivotMotor.set(0.0);
         }

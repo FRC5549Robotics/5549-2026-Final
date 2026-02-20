@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 
 import frc.robot.subsystems.GroundIntake;
 import frc.robot.subsystems.Hood;
@@ -141,13 +142,16 @@ public class RobotContainer {
         NamedCommands.registerCommand("WaitAndBelt", beltCommand());
         NamedCommands.registerCommand("WaitAndIntakeUpDown", intakeCommand());
         NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
-        NamedCommands.registerCommand("PivotDown", new InstantCommand(m_pivot:: setPivotDown));
+        NamedCommands.registerCommand("PivotDownAndIntake", new StartEndCommand(
+                () -> m_pivot.setPivotDown(), //what to run while active
+                () -> m_pivot.off(), //what to run to end it
+                m_pivot
+            ).withTimeout(2.0) //how long to run it
+        );
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
         NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(700), m_shooter));
         NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
         NamedCommands.registerCommand("HoodTo78", new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
-
-
 
         m_LED.setStateSupplier(() -> {
 
@@ -155,6 +159,9 @@ public class RobotContainer {
             boolean lbHeld = m_driver.getHID().getLeftBumper();
             double tx = getFilteredTX();
             boolean atSpeed = m_shooter.atSpeed();
+            double seconds = gameState.getSecondsUntilHubToggle();
+
+            m_LED.setCountdown(seconds);
 
             SmartDashboard.putBoolean("Hub Inactive", hubInactive);
             SmartDashboard.putBoolean("LB Held", lbHeld);
@@ -341,6 +348,10 @@ public class RobotContainer {
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
     }
 
+    public GameState getGameState() {
+        return gameState;
+    }
+
 
     public LEDState computeLEDState(
         boolean hubInactive,
@@ -353,11 +364,11 @@ public class RobotContainer {
         }
 
         if (!lbHeld) {
-            return LEDState.BLUE;
+            return LEDState.PURPLE;
         }
 
         if (!Double.isFinite(tx) || Math.abs(tx) > 5 || !atSpeed) {
-            return LEDState.BLUE;
+            return LEDState.PURPLE;
          }
 
          return LEDState.GREEN;

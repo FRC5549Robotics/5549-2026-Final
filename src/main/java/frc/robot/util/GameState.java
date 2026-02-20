@@ -42,4 +42,21 @@ public class GameState {
         else return false; //endgame is always active
 
     }
+
+    public double getSecondsUntilHubToggle() {
+
+        if (!DriverStation.isTeleopEnabled()) return -1;
+
+        double matchTime = DriverStation.getMatchTime();
+
+        double[] transitions = {130,105,80,55,30};
+
+        for (double t : transitions) {
+            if (matchTime > t) {
+                return matchTime - t;
+            }
+        }
+
+        return -1;
+    }
 }

@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 
 import frc.robot.commands.ZeroHood;
+import frc.robot.util.GameState;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -38,6 +39,7 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run(); 
+        m_robotContainer.getGameState().update();
     }
 
     @Override

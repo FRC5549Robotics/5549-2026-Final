@@ -9,6 +9,8 @@ import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StripTypeValue;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Timer;
 
 import frc.robot.subsystems.LEDState;
 
@@ -26,6 +28,11 @@ public class LED extends SubsystemBase {
     private static final RGBWColor PURPLE = new RGBWColor(185, 0, 255, 0);
 
     private LEDState currentState = null;
+
+    private final Timer blinkTimer = new Timer();
+    private boolean blinking = false;
+    private double blinkPeriod = 1.0;
+    private static final double BLINK_START_TIME = 5.0;
 
     public void setStateSupplier(Supplier<LEDState> supplier) {
         this.stateSupplier = supplier;
@@ -46,16 +53,35 @@ public class LED extends SubsystemBase {
             new SolidColor(0, 399).withColor(GREEN)
         );
         currentState = LEDState.GREEN;
+
+        blinkTimer.start();
+    }
+
+    public void setCountdown(double secondsRemaining) {
+        if (secondsRemaining < 0) {
+            blinking = false;
+            return;
+        }
+
+        if (secondsRemaining > BLINK_START_TIME) {
+            blinking = false;
+            return;
+        }
+
+        blinking = true;
+
+        blinkPeriod = MathUtil.clamp(secondsRemaining/4.0, 0.08, 0.6);
     }
 
     public void setState(LEDState state) {
-
         if (state == currentState) {
             return;
         }
 
         currentState = state;
+    }
 
+    private void applySolid(LEDState state) {
         switch (state) {
             case RED:
                 candle.setControl( new SolidColor(0, 399).withColor(RED));
@@ -73,6 +99,18 @@ public class LED extends SubsystemBase {
     public void periodic() {
         if (stateSupplier != null) {
             setState(stateSupplier.get());
+        }
+
+        if (blinking) {
+            boolean on = (blinkTimer.get() % blinkPeriod) < (blinkPeriod/2.0);
+
+            if (on) {
+                applySolid(currentState);
+            } else {
+                candle.setControl(new SolidColor(0, 399).withColor(new RGBWColor(0,0,0,0)));
+            }
+        } else {
+            applySolid(currentState);
         }
 
         SmartDashboard.putString("LED State", currentState.name());
