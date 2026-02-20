@@ -70,7 +70,7 @@ public class Hood extends SubsystemBase{
 
     public boolean atTarget() {
         double error = HoodMotor.getClosedLoopError().getValueAsDouble();
-        return Math.abs(error) < 0.1;
+        return Math.abs(error) < 0.2;
     }
 
     public void hoodDownSlow() {
@@ -78,7 +78,7 @@ public class Hood extends SubsystemBase{
     }
 
     public void stop() {
-        HoodMotor.setControl(positionRequest.withPosition(HoodMotor.getPosition().getValueAsDouble()));
+        HoodMotor.setControl(new NeutralOut());
         System.out.println("hood motor stop() ran");
     }
 

@@ -23,7 +23,7 @@ public class LED extends SubsystemBase {
     //define colors
     private static final RGBWColor GREEN = new RGBWColor(0, 255, 0, 0);
     private static final RGBWColor RED = new RGBWColor(255, 0, 0, 0);
-    private static final RGBWColor BLUE = new RGBWColor(0, 0, 255, 0);
+    private static final RGBWColor PURPLE = new RGBWColor(185, 0, 255, 0);
 
     private LEDState currentState = null;
 
@@ -60,8 +60,8 @@ public class LED extends SubsystemBase {
             case RED:
                 candle.setControl( new SolidColor(0, 399).withColor(RED));
                 break;
-            case BLUE: 
-                candle.setControl( new SolidColor(0, 399).withColor(BLUE));
+            case PURPLE: 
+                candle.setControl( new SolidColor(0, 399).withColor(PURPLE));
                 break;
             case GREEN: 
                 candle.setControl( new SolidColor(0, 399).withColor(GREEN));
