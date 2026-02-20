@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AimAndSpinUpCommand;
 import frc.robot.commands.AlignLimelight;
-import frc.robot.commands.AutoAlignAndAimAndSpinUp;
+import frc.robot.commands.MegaShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -155,8 +155,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("AimAndSpinUp", new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood));
         NamedCommands.registerCommand(
             "AutoAlign",
-            new AutoAlignAndAimAndSpinUp(drivetrain, m_limelight, m_shooter, m_hood)
-                .withTimeout(0.5)
+            new MegaShootCommand(drivetrain, m_limelight, m_shooter, m_hood)
+                .withTimeout(1.5)
         );
 
         m_LED.setStateSupplier(() -> {
