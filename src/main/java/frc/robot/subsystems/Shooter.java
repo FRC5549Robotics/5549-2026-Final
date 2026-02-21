@@ -10,11 +10,21 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.controller.ControlAffinePlantInversionFeedforward;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.units.measure.Voltage;
+import static edu.wpi.first.units.Units.*;
+import com.ctre.phoenix6.controls.VoltageOut;
+
 import frc.robot.Constants;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+
 
 public class Shooter extends SubsystemBase {
   private final TalonFX left = new TalonFX(Constants.LEFT_MOTOR_ID, "lil clanker");
@@ -23,6 +33,7 @@ public class Shooter extends SubsystemBase {
 
   // Phoenix 6 request object (reuse it; don’t new it every loop)
   private final VelocityVoltage leftVelReq = new VelocityVoltage(0).withEnableFOC(true);
+  private final VoltageOut charVoltage = new VoltageOut(0);
 
   // Right follows left. Set invert = true/false depending on your gearbox mounting.
   
@@ -50,7 +61,7 @@ public class Shooter extends SubsystemBase {
 
     // Optional: set some starting slot gains on the Talon itself (closed-loop velocity P/I/D).
     // These are NOT the same as your WPILib PID values.
-    cfg.Slot0.kP = 0.05;  // start small, tune
+    cfg.Slot0.kP = 0.00;  // start small, tune
     cfg.Slot0.kI = 0.00;
     cfg.Slot0.kD = 0.00;
 
@@ -64,6 +75,10 @@ public class Shooter extends SubsystemBase {
     middle.setControl(middleFollower);
   }
 
+  private double getVelocityRPS() {
+    return left.getVelocity().getValueAsDouble();
+  }
+
   // Call this to spin up to a speed
   public void setShooterRPM(double rpm) {
     targetRPM = rpm;
@@ -71,7 +86,7 @@ public class Shooter extends SubsystemBase {
   }
 
   public void shoot(double rpm) {
-    System.out.println("shooting");
+    //System.out.println("shooting");
     setShooterRPM(rpm); 
     shooterEnabled = true;
   }
@@ -110,6 +125,8 @@ public class Shooter extends SubsystemBase {
     // If you don’t have accel, use the 1-arg calculate (kS + kV*w)
     double ffVolts = ff.calculate(targetRadPerSec);
 
+    double shooterVolts = left.getMotorVoltage().getValueAsDouble();
+
     // Command velocity with arbitrary feedforward voltage
     left.setControl(
         leftVelReq
@@ -117,10 +134,47 @@ public class Shooter extends SubsystemBase {
             .withFeedForward(ffVolts)    // volts
     );
     
-
+    System.out.println("periodic");
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
     SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
+    SmartDashboard.putNumber("RPS", leftRPS);
+    SmartDashboard.putNumber("Shooter Volts", shooterVolts);
     SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
 
+  }
+
+  private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
+    new SysIdRoutine.Config(
+      Volts.of(0.5).per(Second),
+      Volts.of(6),
+      null,
+      (state) -> {}
+    ),
+    new SysIdRoutine.Mechanism(
+      (Voltage volts) -> {
+        left.setVoltage(volts.in(Volts));
+        right.setControl(new Follower(Constants.LEFT_MOTOR_ID, MotorAlignmentValue.Opposed));
+        middle.setControl(new Follower(Constants.LEFT_MOTOR_ID, MotorAlignmentValue.Opposed));
+      },
+      log -> {
+        log.motor("shooter")
+          .voltage(Volts.of(left.getMotorVoltage().getValueAsDouble()))
+          .angularVelocity(RotationsPerSecond.of(getVelocityRPS()));
+      },
+      this
+    )
+  );
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction dir) {
+    return sysIdRoutine.quasistatic(dir);
+  }
+
+  public Command sysIdDynamic (SysIdRoutine.Direction dir) {
+    return sysIdRoutine.dynamic(dir);
+  }
+
+  public void runCharacterization(double volts) {
+    shooterEnabled = false;
+    left.setControl(charVoltage.withOutput(volts));
   }
 }
