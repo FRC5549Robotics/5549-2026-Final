@@ -66,7 +66,7 @@ public class Hood extends SubsystemBase{
     }
 
     public void setAngle(double targetDeg) {
-        targetDeg = MathUtil.clamp(targetDeg, 69.0, 78.0);
+        targetDeg = MathUtil.clamp(targetDeg, 69.0, 78.5);
         hoodSetpoint = targetDeg;
     }
 

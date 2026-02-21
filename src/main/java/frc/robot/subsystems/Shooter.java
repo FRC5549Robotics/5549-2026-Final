@@ -13,6 +13,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.filter.LinearFilter;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -43,10 +44,12 @@ public class Shooter extends SubsystemBase {
   // Units here are in VOLTS:
   // kS: volts, kV: volts per (rad/s), kA: volts per (rad/s^2)
   private final SimpleMotorFeedforward ff =
-      new SimpleMotorFeedforward(0.252, 0.0208, 0.10);
+      new SimpleMotorFeedforward(0.41, 0.1265);
 
   private boolean shooterEnabled = false;
   private double targetRPM = 0.0;
+
+  private final LinearFilter rpmFilter = LinearFilter.movingAverage(8);
 
   public Shooter() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
@@ -61,7 +64,7 @@ public class Shooter extends SubsystemBase {
 
     // Optional: set some starting slot gains on the Talon itself (closed-loop velocity P/I/D).
     // These are NOT the same as your WPILib PID values.
-    cfg.Slot0.kP = 0.00;  // start small, tune
+    cfg.Slot0.kP = 1.00;  // start small, tune
     cfg.Slot0.kI = 0.00;
     cfg.Slot0.kD = 0.00;
 
@@ -110,22 +113,23 @@ public class Shooter extends SubsystemBase {
   public void periodic() {
     double leftRPS = left.getVelocity().getValueAsDouble();     // motor rotations/sec
     double leftRPM = leftRPS * 60.0;
+    double rpmFiltered = rpmFilter.calculate(leftRPM);
+    double targetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(targetRPM);     // Feedforward usually wants rad/s. Convert motor RPS -> rad/s
+    double targetRPS = targetRPM / 60.0; // Convert target RPM -> target RPS (Phoenix 6 uses RPS)
+    double ffVolts = ff.calculate(targetRPS);
+    double shooterVolts = left.getMotorVoltage().getValueAsDouble();
+
+    SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
+    SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
+    SmartDashboard.putNumber("RPS", leftRPS);
+    SmartDashboard.putNumber("Shooter Volts", shooterVolts);
+    SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
+    SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
 
     if (!shooterEnabled) {
       SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
       return;
     }
-
-    // Convert target RPM -> target RPS (Phoenix 6 uses RPS)
-    double targetRPS = targetRPM / 60.0;
-
-    // Feedforward usually wants rad/s. Convert motor RPS -> rad/s
-    double targetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(targetRPM);
-
-    // If you don’t have accel, use the 1-arg calculate (kS + kV*w)
-    double ffVolts = ff.calculate(targetRadPerSec);
-
-    double shooterVolts = left.getMotorVoltage().getValueAsDouble();
 
     // Command velocity with arbitrary feedforward voltage
     left.setControl(
@@ -133,13 +137,6 @@ public class Shooter extends SubsystemBase {
             .withVelocity(targetRPS)     // RPS
             .withFeedForward(ffVolts)    // volts
     );
-    
-    System.out.println("periodic");
-    SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
-    SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
-    SmartDashboard.putNumber("RPS", leftRPS);
-    SmartDashboard.putNumber("Shooter Volts", shooterVolts);
-    SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
 
   }
 
