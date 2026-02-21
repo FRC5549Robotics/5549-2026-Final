@@ -13,6 +13,7 @@ import frc.robot.Constants;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 
 public class Belt extends SubsystemBase{
     TalonFX belt_right;
@@ -22,7 +23,7 @@ public class Belt extends SubsystemBase{
     TalonFXConfiguration beltConfigs;
     TalonFXConfigurator beltConfigurator;
 
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withEnableFOC(true);
+    private final DutyCycleOut dutyCycleOut = new DutyCycleOut(0.0).withEnableFOC(true);
     
     //private final VoltageOut voltageRequest = new VoltageOut(0);
 
@@ -36,12 +37,15 @@ public class Belt extends SubsystemBase{
         beltConfigs = new TalonFXConfiguration();
         beltConfigurator = belt_right.getConfigurator();
 
-        beltConfigs.CurrentLimits.StatorCurrentLimit = 70;
+        beltConfigs.CurrentLimits.StatorCurrentLimit = 60;
         beltConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
-        beltConfigs.CurrentLimits.SupplyCurrentLimit = 40;
+        beltConfigs.CurrentLimits.SupplyCurrentLimit = 60;
         beltConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         beltConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+
+        beltConfigs.Voltage.PeakForwardVoltage = 12.0;
+        beltConfigs.Voltage.PeakReverseVoltage = -12.0;
 
         beltConfigs.Slot0.kP = 0.12;
         beltConfigs.Slot0.kI = 0.0;
@@ -57,14 +61,14 @@ public class Belt extends SubsystemBase{
 
     
     public void intake(){
-        belt_right.setControl(velocityRequest.withVelocity(100)); //run belts at 100rps
+        belt_right.setControl(dutyCycleOut.withOutput(1.0)); //run belts at 75rps
     }
     public void jammed(){
-        belt_right.setControl(velocityRequest.withVelocity(-25)); //run belts backwards
+        belt_right.setControl(dutyCycleOut.withOutput(-0.3)); //run belts backwards
     }
     
     public void off(){
-        belt_right.setControl(velocityRequest.withVelocity(0)); //turn off belts
+        belt_right.setControl(dutyCycleOut.withOutput(0)); //turn off belts
     }
     
 }

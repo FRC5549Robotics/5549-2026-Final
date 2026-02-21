@@ -9,7 +9,12 @@ public class ShooterLookup {
 private static final TreeMap<Double, ShooterState> table = new TreeMap<>();
 
 static {
-    table.put(0.936786, new ShooterState(78.5, 600));
+    table.put(1.012623, new ShooterState(78.5, 820));
+    table.put(1.443128, new ShooterState(77.5, 900));
+    table.put(1.936055, new ShooterState(76.2, 1000));
+    table.put(2.415026, new ShooterState(75.5, 1100));
+    table.put(2.944653, new ShooterState(74.5, 1180));
+    table.put(3.383125, new ShooterState(74, 1270));
 }
 
 public static ShooterState get(double distanceMeters) {

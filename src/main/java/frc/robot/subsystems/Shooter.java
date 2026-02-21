@@ -98,7 +98,6 @@ public class Shooter extends SubsystemBase {
     shooterEnabled = false;
     targetRPM = 0.0;
     left.set(0);
-    right.set(0);
   }
 
   public boolean atSpeed() {
