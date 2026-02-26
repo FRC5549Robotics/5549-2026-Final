@@ -22,24 +22,26 @@ public class GameState {
 
     public boolean isHubInactiveNow() {
 
-        if (!DriverStation.isTeleopEnabled()) return false;
-
         Optional<DriverStation.Alliance> allianceOpt = DriverStation.getAlliance();
+
         if (allianceOpt.isEmpty()) return false;
+
+        if (DriverStation.isAutonomousEnabled()) return false; //not inactive during auto
+
+        if (!DriverStation.isTeleopEnabled()) return true; //
 
         DriverStation.Alliance alliance = allianceOpt.get();
 
         double matchTime = DriverStation.getMatchTime();
 
-        boolean shift1Active = 
-            (alliance == DriverStation.Alliance.Red) ? !redInactiveFirst : redInactiveFirst;
+        boolean shift1Active = (alliance == DriverStation.Alliance.Red) ? !redInactiveFirst : redInactiveFirst; //I checked, it's getting the correct shift1Active
 
-        if (matchTime > 130) return false; //transition period, no hub is not inactive no matter what
+        if (matchTime > 130) return false; //transition period, no hub is inactive no matter what
         else if (matchTime > 105) return !shift1Active; //shift one
-        else if (matchTime > 80) return shift1Active; 
-        else if (matchTime > 55) return !shift1Active;
-        else if (matchTime > 30) return shift1Active;
-        else return false; //endgame is always active
+        else if (matchTime > 80) return shift1Active; //shift 2
+        else if (matchTime > 55) return !shift1Active; //shift 3
+        else if (matchTime > 30) return shift1Active; //shift 4
+        else return true; //endgame is always active
 
     }
 

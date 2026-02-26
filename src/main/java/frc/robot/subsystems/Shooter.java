@@ -105,7 +105,7 @@ public class Shooter extends SubsystemBase {
     if (targetRPM == 0.0) {
       return false;
     }
-    return Math.abs(currentRPM - targetRPM) < 500; //Is flywheel rpm within tolerance?
+    return Math.abs(currentRPM - targetRPM) < 100; //Is flywheel rpm within tolerance?
   }
 
   @Override

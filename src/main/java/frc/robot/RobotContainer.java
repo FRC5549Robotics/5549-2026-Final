@@ -18,7 +18,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AimAndSpinUpCommand;
 import frc.robot.commands.AlignLimelight;
-import frc.robot.commands.MegaShootCommand;
+import frc.robot.commands.AutoShootCommand;
+import frc.robot.commands.TeleopShootCommand;
+import frc.robot.commands.ZeroHood;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -95,7 +97,6 @@ public class RobotContainer {
     POVButton raiseHood = new POVButton(m_operator.getHID(), 0);
 
     private final Limelight m_limelight = new Limelight(drivetrain, m_driver);
-    // private final Intake m_intake = new Intake();
     // private final Shooter m_Shooter = new Shooter();
     // private final Belt m_Belt = new Belt();
     private final GroundIntake m_pivot = new GroundIntake();
@@ -134,11 +135,11 @@ public class RobotContainer {
     }
     public RobotContainer() {
         drivetrain.configurePathPlanner();  
-        autoChooser = AutoBuilder.buildAutoChooser();
+        
     //     autoChooser = AutoBuilder.buildAutoChooser();
         
         
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        
         NamedCommands.registerCommand("RunBelt", new InstantCommand(m_belt::intake));
         NamedCommands.registerCommand("WaitAndBelt", beltCommand());
         NamedCommands.registerCommand("WaitAndIntakeUpDown", intakeCommand());
@@ -155,11 +156,16 @@ public class RobotContainer {
         NamedCommands.registerCommand("HoodTo78", new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
         NamedCommands.registerCommand("AimAndSpinUp", new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood));
         NamedCommands.registerCommand(
-            "MegaShootCommand",
-            new MegaShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
-                .withTimeout(3.0)
+            "AutoShootCommand",
+            new SequentialCommandGroup(
+                new ZeroHood(m_hood),
+                new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
+                .withTimeout(7.0)
+            )
         );
 
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Chooser", autoChooser);
         m_LED.setStateSupplier(() -> {
 
             boolean hubInactive = gameState.isHubInactiveNow();
@@ -198,74 +204,9 @@ public class RobotContainer {
         //LIMELIGHT DRIVE LEFT BUMPER
         SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric();
 
-        m_driver.leftBumper()
+        m_driver.rightBumper()
             .whileTrue(
-                new ParallelCommandGroup(
-                    drivetrain.applyRequest(() -> {
-                        double rotationOutput = 0;
-                        double deadband = Constants.DRIVER_DEADBAND;
-
-                        double translationX = MathUtil.applyDeadband(m_driver.getLeftY(), deadband);
-                        double translationY = MathUtil.applyDeadband(m_driver.getLeftX(), deadband);
-
-                        boolean hasTarget = LimelightHelpers.getTV("limelight");
-
-                        if (hasTarget) {
-
-                            int tagID = (int) LimelightHelpers.getFiducialID("limelight");
-
-                            int desiredPipeline = 0;
-
-                            switch (tagID) {
-                            // middle
-                            case 5:
-                            case 10:
-                            case 2:
-                            case 18:
-                            case 26:
-                            case 21:
-                                desiredPipeline = 0;
-                                break;
-                            // right
-                            case 8:
-                            case 24:
-                                desiredPipeline = 1;
-                                break;
-                            //left
-                            case 9:
-                            case 11:
-                            case 25:
-                            case 27:
-                                desiredPipeline = 2;
-                                break;
-                            }
-
-                            if (desiredPipeline != lastPipeline) {
-                                LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
-                                lastPipeline = desiredPipeline;
-                            }
-
-                            double tx = getFilteredTX();
-
-                            double kP = 0.015;
-
-                            if (!Double.isNaN(tx)) {
-                                    rotationOutput = tx * -kP * MaxAngularRate;
-                            } else {
-                                rotationOutput = -m_driver.getRightX() * MaxAngularRate;
-                            }
-
-                        } else {
-                            rotationOutput = -m_driver.getRightX() * MaxAngularRate;
-                        }
-
-                        return aimRequest
-                            .withVelocityX(-translationX * MaxSpeed)
-                            .withVelocityY(-translationY * MaxSpeed)
-                            .withRotationalRate(rotationOutput);
-                    }),
-                    new AimAndSpinUpCommand(m_limelight, m_shooter, m_hood)
-                )
+                new TeleopShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
             )
             .onFalse(
                 new InstantCommand(m_shooter::off, m_shooter)
@@ -311,7 +252,8 @@ public class RobotContainer {
         m_operator.axisGreaterThan(1, Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotDown)).onFalse(new InstantCommand(m_pivot::off)); 
         m_operator.axisLessThan(1, -Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotUp)).onFalse(new InstantCommand(m_pivot::off)); 
         //Belt unjam
-        m_operator.rightBumper().onTrue(new InstantCommand(m_belt:: jammed)).onFalse(new InstantCommand(m_belt:: off));
+        m_driver.leftBumper().onTrue(new InstantCommand(m_belt:: jammed)).onFalse(new InstantCommand(m_belt:: off));
+        m_driver.axisGreaterThan(3, Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotUp)).whileFalse(new RunCommand(m_pivot::setPivotDown));
         //Operator shoots balls
         m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
             .whileTrue(
@@ -355,7 +297,7 @@ public class RobotContainer {
         //setpoint for passing
         m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
 
-        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1000), m_shooter));
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(600), m_shooter));
         
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
     }
@@ -390,7 +332,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
 
         System.out.println("getAutonomousCommand");
-        return new PathPlannerAuto("maybe center sprint left");
+        return new PathPlannerAuto(autoChooser.getSelected());
     
         // // Simple drive forward auton
         // final var idle = new SwerveRequest.Idle();

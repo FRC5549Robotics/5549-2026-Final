@@ -18,7 +18,7 @@ import frc.robot.shooter.ShooterState;
 import static edu.wpi.first.units.Units.*;
 
 
-public class MegaShootCommand extends Command {
+public class TeleopShootCommand extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final Limelight limelight;
     private final Shooter shooter;
@@ -35,14 +35,13 @@ public class MegaShootCommand extends Command {
     private enum State {
         ALIGNING,
         SPINNING_UP,
-        SHOOTING,
-        DONE
+        SHOOTING
     }
 
     private State state = State.ALIGNING;
     private final Timer shootTimer = new Timer();
 
-    public MegaShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake) {
+    public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake) {
         this.drivetrain = drivetrain;
         this.limelight = limelight;
         this.shooter = shooter;
@@ -112,7 +111,7 @@ public class MegaShootCommand extends Command {
                 if (!Double.isNaN(tx)) {
                     rotationOutput = tx * -kP * MaxAngularRate;
 
-                    if (Math.abs(tx) < 2.0) {
+                    if (Math.abs(tx) < 1.0) { //initial tolerance
                         state = State.SPINNING_UP;
                     }
                 }
@@ -135,24 +134,30 @@ public class MegaShootCommand extends Command {
             hood.setAngle(shot.hoodAngleDeg);
             shooter.shoot(shot.flywheelRPM);
 
-            if (shooter.atSpeed() && hood.atTarget()) {
+            if (shooter.atSpeed()) {
+                shootTimer.reset();
                 shootTimer.start();
                 state = State.SHOOTING;
             }
             return;
-        }
+            }
         if (state == State.SHOOTING) {
+            if (Math.abs(getFilteredTX()) > 5.0) { //check if it goes out of tolerance
+                belt.off();
+                intake.off();
+                state = State.ALIGNING;
+            }
+
+            if (!shooter.atSpeed()) {
+                belt.off();
+            }
+
             belt.intake();
 
-            if (shootTimer.hasElapsed(2)) {
+            if (shootTimer.hasElapsed(1.5)) { //delay before the intake goes up and down
                 intake.shooting();
             }
 
-            if (shootTimer.hasElapsed(7)) {
-                belt.off();
-                intake.off();
-                state = State.DONE;
-            }
             return;
         }
     }
@@ -167,7 +172,7 @@ public class MegaShootCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        return state == State.DONE;
+        return false;
     }
 
     @Override
