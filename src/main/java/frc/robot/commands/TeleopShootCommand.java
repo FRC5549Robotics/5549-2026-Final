@@ -106,12 +106,12 @@ public class TeleopShootCommand extends Command {
                 }
 
                 double tx = getFilteredTX();
-                double kP = 0.015;
+                double kP = 0.014;
 
                 if (!Double.isNaN(tx)) {
                     rotationOutput = tx * -kP * MaxAngularRate;
 
-                    if (Math.abs(tx) < 1.0) { //initial tolerance
+                    if (Math.abs(tx) < 0.5) { //initial tolerance
                         state = State.SPINNING_UP;
                     }
                 }
@@ -125,6 +125,7 @@ public class TeleopShootCommand extends Command {
             drivetrain.stopDriving();
 
             double distance = limelight.getDistanceToTagMeters();
+            SmartDashboard.putNumber("Distance", distance);
 
             if (distance <= 0) {
                 return;

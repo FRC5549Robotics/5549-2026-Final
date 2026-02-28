@@ -142,14 +142,20 @@ public class RobotContainer {
         
         NamedCommands.registerCommand("RunBelt", new InstantCommand(m_belt::intake));
         NamedCommands.registerCommand("WaitAndBelt", beltCommand());
-        NamedCommands.registerCommand("WaitAndIntakeUpDown", intakeCommand());
+        NamedCommands.registerCommand("PivotUp", new StartEndCommand(
+                () -> m_pivot.setPivotUp(), //what to run while active
+                () -> m_pivot.off(), //what to run to end it
+                m_pivot
+            ).withTimeout(2.15) //how long to run it
+        );
         NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
         NamedCommands.registerCommand("PivotDownAndIntake", new StartEndCommand(
                 () -> m_pivot.setPivotDown(), //what to run while active
                 () -> m_pivot.off(), //what to run to end it
                 m_pivot
-            ).withTimeout(2.0) //how long to run it
+            ).withTimeout(2.15) //how long to run it
         );
+
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
         NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(1800), m_shooter));
         NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
@@ -160,7 +166,7 @@ public class RobotContainer {
             new SequentialCommandGroup(
                 new ZeroHood(m_hood),
                 new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
-                .withTimeout(7.0)
+                .withTimeout(5.0)
             )
         );
 
@@ -290,7 +296,7 @@ public class RobotContainer {
         //setpoint for shooting close to hub
         m_operator.button(4).onTrue(new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
 
-        m_operator.button(4).whileTrue(new RunCommand(() -> m_shooter.shoot(1860), m_shooter));
+        m_operator.button(4).whileTrue(new RunCommand(() -> m_shooter.shoot(2000), m_shooter));
         
         m_operator.button(4).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 

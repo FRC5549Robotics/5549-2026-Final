@@ -43,15 +43,14 @@ public class Shooter extends SubsystemBase {
      // Tune these from SysId or manual tuning
   // Units here are in VOLTS:
   // kS: volts, kV: volts per (rad/s), kA: volts per (rad/s^2)
-  private final SimpleMotorFeedforward ff =
-      new SimpleMotorFeedforward(0.41, 0.1265);
+  private final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0.28, 0.122);
 
   private boolean shooterEnabled = false;
   private double targetRPM = 0.0;
 
   private final LinearFilter rpmFilter = LinearFilter.movingAverage(8);
 
-  public Shooter() {
+  public Shooter() { //shooter constructor
     TalonFXConfiguration cfg = new TalonFXConfiguration();
 
     cfg.CurrentLimits.StatorCurrentLimit = 120;
@@ -64,7 +63,7 @@ public class Shooter extends SubsystemBase {
 
     // Optional: set some starting slot gains on the Talon itself (closed-loop velocity P/I/D).
     // These are NOT the same as your WPILib PID values.
-    cfg.Slot0.kP = 1.00;  // start small, tune
+    cfg.Slot0.kP = 0.00;  // start small, tune
     cfg.Slot0.kI = 0.00;
     cfg.Slot0.kD = 0.00;
 
@@ -105,7 +104,7 @@ public class Shooter extends SubsystemBase {
     if (targetRPM == 0.0) {
       return false;
     }
-    return Math.abs(currentRPM - targetRPM) < 100; //Is flywheel rpm within tolerance?
+    return Math.abs(currentRPM - targetRPM) < 25; //Is flywheel rpm within tolerance?
   }
 
   @Override
@@ -124,11 +123,6 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("Shooter Volts", shooterVolts);
     SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
     SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
-
-    if (!shooterEnabled) {
-      SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
-      return;
-    }
 
     // Command velocity with arbitrary feedforward voltage
     left.setControl(

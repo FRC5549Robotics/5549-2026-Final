@@ -9,10 +9,14 @@ import com.ctre.phoenix6.HootAutoReplay;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Preferences;
 
 import frc.robot.commands.ZeroHood;
+import frc.robot.shooter.ShooterLookup;
 import frc.robot.util.GameState;
 
 public class Robot extends TimedRobot {
@@ -33,6 +37,16 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
+
+        CameraServer.startAutomaticCapture("camera", 0);
+
+        for (int i = 1; i <= 6; i++) {
+            // Use initDouble to set defaults only if they don't exist
+            Preferences.initDouble("Shooter_Dist_" + i, 0.0);
+            Preferences.initDouble("Shooter_Angle_" + i, 0.0);
+            Preferences.initDouble("Shooter_RPM_" + i, 0.0);
+        }
+
     }
 
     @Override
@@ -40,6 +54,8 @@ public class Robot extends TimedRobot {
         m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run(); 
         m_robotContainer.getGameState().update();
+
+        ShooterLookup.updateTableFromPreferences();
     }
 
     @Override
