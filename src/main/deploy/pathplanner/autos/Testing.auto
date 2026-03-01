@@ -9,25 +9,6 @@
           "data": {
             "name": "AutoShootCommand"
           }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Easy"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "PivotDownAndIntake"
-                }
-              }
-            ]
-          }
         }
       ]
     }

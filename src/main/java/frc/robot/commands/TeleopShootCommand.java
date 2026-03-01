@@ -105,13 +105,16 @@ public class TeleopShootCommand extends Command {
                     lastPipeline = desiredPipeline;
                 }
 
+
                 double tx = getFilteredTX();
                 double kP = 0.014;
+
+                System.out.println(tx);
 
                 if (!Double.isNaN(tx)) {
                     rotationOutput = tx * -kP * MaxAngularRate;
 
-                    if (Math.abs(tx) < 0.5) { //initial tolerance
+                    if (Math.abs(tx) < 0.75) { //initial tolerance
                         state = State.SPINNING_UP;
                     }
                 }
@@ -143,11 +146,11 @@ public class TeleopShootCommand extends Command {
             return;
             }
         if (state == State.SHOOTING) {
-            if (Math.abs(getFilteredTX()) > 5.0) { //check if it goes out of tolerance
-                belt.off();
-                intake.off();
-                state = State.ALIGNING;
-            }
+            //if (Math.abs(getFilteredTX()) > 5.0) { //check if it goes out of tolerance
+                //belt.off();
+                //intake.off();
+                //state = State.ALIGNING;
+            //}
 
             if (!shooter.atSpeed()) {
                 belt.off();
@@ -155,7 +158,7 @@ public class TeleopShootCommand extends Command {
 
             belt.intake();
 
-            if (shootTimer.hasElapsed(1.5)) { //delay before the intake goes up and down
+            if (shootTimer.hasElapsed(2.5)) { //delay before the intake goes up and down
                 intake.shooting();
             }
 

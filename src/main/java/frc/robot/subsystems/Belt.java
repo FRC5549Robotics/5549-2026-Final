@@ -61,7 +61,7 @@ public class Belt extends SubsystemBase{
 
     
     public void intake(){
-        belt_right.setControl(dutyCycleOut.withOutput(0.73)); //run belts at 75rps
+        belt_right.setControl(dutyCycleOut.withOutput(0.83)); //run belts at 75rps
     }
     public void jammed(){
         belt_right.setControl(dutyCycleOut.withOutput(-0.3)); //run belts backwards

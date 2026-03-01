@@ -114,7 +114,7 @@ public class AutoShootCommand extends Command {
                 if (!Double.isNaN(tx)) {
                     rotationOutput = tx * -kP * MaxAngularRate;
 
-                    if (Math.abs(tx) < 1.0) {
+                    if (Math.abs(tx) < 1.25) {
                         state = State.SPINNING_UP;
                     }
                 }
@@ -147,11 +147,11 @@ public class AutoShootCommand extends Command {
         if (state == State.SHOOTING) {
             belt.intake();
 
-            if (shootTimer.hasElapsed(1)) {
+            if (shootTimer.hasElapsed(5)) {
                 intake.shooting();
             }
 
-            if (shootTimer.hasElapsed(7)) {
+            if (shootTimer.hasElapsed(15)) {
                 belt.off();
                 intake.off();
                 state = State.DONE;

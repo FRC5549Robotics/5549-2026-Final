@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Left Side Center Sweep Trench"
+                  "pathName": "(don't touch) Left Far Middle Full"
                 }
               },
               {
@@ -28,12 +28,6 @@
                       "type": "named",
                       "data": {
                         "name": "PivotDownAndIntake"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "PivotUp"
                       }
                     }
                   ]
