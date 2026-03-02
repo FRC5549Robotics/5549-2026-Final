@@ -17,6 +17,8 @@ import frc.robot.shooter.ShooterState;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.BooleanSupplier;
+
 
 public class TeleopShootCommand extends Command {
     private final CommandSwerveDrivetrain drivetrain;
@@ -25,6 +27,8 @@ public class TeleopShootCommand extends Command {
     private final Hood hood;
     private final Belt belt;
     private final GroundIntake intake;
+
+    private final BooleanSupplier allowAutoPivot;
 
     private final LinearFilter txFilter = LinearFilter.movingAverage(4);
 
@@ -41,15 +45,17 @@ public class TeleopShootCommand extends Command {
     private State state = State.ALIGNING;
     private final Timer shootTimer = new Timer();
 
-    public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake) {
+    public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
         this.drivetrain = drivetrain;
         this.limelight = limelight;
         this.shooter = shooter;
         this.hood = hood;
+        
         this.belt = belt;
         this.intake = intake;
+        this.allowAutoPivot = allowAutoPivot;
 
-        addRequirements(drivetrain, shooter, hood, belt, intake);
+        addRequirements(drivetrain, shooter, hood, belt);
     }
 
     public double getFilteredTX() {
@@ -108,13 +114,19 @@ public class TeleopShootCommand extends Command {
 
                 double tx = getFilteredTX();
                 double kP = 0.014;
+                double kS = 0.1;
+                double tolerance = 0.75;
+                double omega = tx * -kP * MaxAngularRate;
 
                 System.out.println(tx);
 
                 if (!Double.isNaN(tx)) {
-                    rotationOutput = tx * -kP * MaxAngularRate;
 
-                    if (Math.abs(tx) < 0.75) { //initial tolerance
+                    if (Math.abs(tx) > tolerance) { //initial tolerance
+                        omega += Math.copySign(kS, omega);
+                        rotationOutput = omega;
+                    } else {
+                        omega = 0.0;
                         state = State.SPINNING_UP;
                     }
                 }
@@ -159,7 +171,9 @@ public class TeleopShootCommand extends Command {
             belt.intake();
 
             if (shootTimer.hasElapsed(2.5)) { //delay before the intake goes up and down
-                intake.shooting();
+                if (allowAutoPivot.getAsBoolean()) {
+                    intake.shooting();
+                }
             }
 
             return;
@@ -170,7 +184,9 @@ public class TeleopShootCommand extends Command {
     public void end(boolean interupted) {
         shooter.off();
         belt.off();
-        intake.off();
+        if (allowAutoPivot.getAsBoolean()) {
+            intake.shooting();
+        }
         drivetrain.stopDriving();
     }
 

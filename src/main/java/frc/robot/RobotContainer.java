@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -180,7 +182,7 @@ public class RobotContainer {
         m_LED.setStateSupplier(() -> {
 
             boolean hubInactive = gameState.isHubInactiveNow();
-            boolean lbHeld = m_driver.getHID().getLeftBumper();
+            boolean rbHeld = m_driver.getHID().getRightBumper();
             double tx = getFilteredTX();
             boolean atSpeed = m_shooter.atSpeed();
             double seconds = gameState.getSecondsUntilHubToggle();
@@ -188,11 +190,11 @@ public class RobotContainer {
             m_LED.setCountdown(seconds);
 
             SmartDashboard.putBoolean("Hub Inactive", hubInactive);
-            SmartDashboard.putBoolean("LB Held", lbHeld);
+            SmartDashboard.putBoolean("LB Held", rbHeld);
             SmartDashboard.putNumber("Limelight TX", tx);
             SmartDashboard.putBoolean("Shooter At Speed", atSpeed);
 
-            return computeLEDState(hubInactive, lbHeld, tx, atSpeed);
+            return computeLEDState(hubInactive, rbHeld, tx, atSpeed);
         
         });
 
@@ -217,7 +219,7 @@ public class RobotContainer {
 
         m_driver.rightBumper()
             .whileTrue(
-                new TeleopShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
+                new TeleopShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot, () -> !(m_operator.getRawAxis(1) > Constants.TRIGGER_DEADBAND))
             )
             .onFalse(
                 new InstantCommand(m_shooter::off, m_shooter)
@@ -265,7 +267,7 @@ public class RobotContainer {
         m_operator.axisLessThan(1, -Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotUp, m_pivot)).onFalse(new InstantCommand(m_pivot::off, m_pivot)); 
         groundIntakeShakeButton.whileTrue(new RunCommand(m_pivot::shooting, m_pivot)); //RB to shake
         //Belt unjam
-        m_driver.leftBumper().onTrue(new InstantCommand(m_belt:: jammed)).onFalse(new InstantCommand(m_belt:: off));
+        m_operator.leftBumper().onTrue(new InstantCommand(m_belt:: jammed)).onFalse(new InstantCommand(m_belt:: off));
         //driver intake controls
         m_pivot.setDefaultCommand(new RunCommand(() -> {
             if (m_driver.getRightTriggerAxis() > Constants.TRIGGER_DEADBAND) {
@@ -311,14 +313,14 @@ public class RobotContainer {
         //setpoint for shooting close to hub
         m_operator.button(4).onTrue(new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
 
-        m_operator.button(4).whileTrue(new RunCommand(() -> m_shooter.shoot(2000), m_shooter));
+        m_operator.button(4).whileTrue(new RunCommand(() -> m_shooter.shoot(1721), m_shooter));
         
         m_operator.button(4).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
         //setpoint for passing
         m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
 
-        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1000), m_shooter));
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(2500), m_shooter));
         
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
     }
@@ -330,7 +332,7 @@ public class RobotContainer {
 
     public LEDState computeLEDState(
         boolean hubInactive,
-        boolean lbHeld,
+        boolean rbHeld,
         double tx,
         boolean atSpeed) {
 
@@ -338,13 +340,13 @@ public class RobotContainer {
             return LEDState.RED;
         }
 
-        if (!lbHeld) {
+        if (!rbHeld) {
             return LEDState.PURPLE;
         }
 
-        if (!Double.isFinite(tx) || Math.abs(tx) > 5 || !atSpeed) {
-            return LEDState.PURPLE;
-         }
+        //if (!Double.isFinite(tx) || Math.abs(tx) > 5) {
+            //return LEDState.PURPLE;
+        //}
 
          return LEDState.GREEN;
     }

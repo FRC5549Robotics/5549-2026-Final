@@ -109,12 +109,20 @@ public class AutoShootCommand extends Command {
                 }
 
                 double tx = getFilteredTX();
-                double kP = 0.015;
+                double kP = 0.014;
+                double kS = 0.1;
+                double tolerance = 0.75;
+                double omega = tx * -kP * MaxAngularRate;
+
+                System.out.println(tx);
 
                 if (!Double.isNaN(tx)) {
-                    rotationOutput = tx * -kP * MaxAngularRate;
 
-                    if (Math.abs(tx) < 1.25) {
+                    if (Math.abs(tx) > tolerance) { //initial tolerance
+                        omega += Math.copySign(kS, omega);
+                        rotationOutput = omega;
+                    } else {
+                        omega = 0.0;
                         state = State.SPINNING_UP;
                     }
                 }
