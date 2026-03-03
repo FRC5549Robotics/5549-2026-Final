@@ -219,7 +219,7 @@ public class RobotContainer {
 
         m_driver.rightBumper()
             .whileTrue(
-                new TeleopShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot, () -> !(m_operator.getRawAxis(1) > Constants.TRIGGER_DEADBAND))
+                new TeleopShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot, () -> !(m_operator.getRawAxis(1) > Constants.TRIGGER_DEADBAND && groundIntakeShakeButton.getAsBoolean()))
             )
             .onFalse(
                 new InstantCommand(m_shooter::off, m_shooter)
@@ -320,7 +320,7 @@ public class RobotContainer {
         //setpoint for passing
         m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
 
-        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(2500), m_shooter));
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1600), m_shooter));
         
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
     }

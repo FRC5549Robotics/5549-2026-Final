@@ -19,6 +19,8 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.BooleanSupplier;
 
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
 
 public class TeleopShootCommand extends Command {
     private final CommandSwerveDrivetrain drivetrain;
@@ -29,6 +31,8 @@ public class TeleopShootCommand extends Command {
     private final GroundIntake intake;
 
     private final BooleanSupplier allowAutoPivot;
+
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     private final LinearFilter txFilter = LinearFilter.movingAverage(4);
 
@@ -50,7 +54,7 @@ public class TeleopShootCommand extends Command {
         this.limelight = limelight;
         this.shooter = shooter;
         this.hood = hood;
-        
+
         this.belt = belt;
         this.intake = intake;
         this.allowAutoPivot = allowAutoPivot;
@@ -135,6 +139,11 @@ public class TeleopShootCommand extends Command {
             drivetrain.aimDrive(0.0, 0.0, rotationOutput);
             return;
         }
+
+        if (state == State.SPINNING_UP || state == State.SHOOTING) {
+            drivetrain.applyRequest(() -> brake).schedule();
+        }
+
 
         if (state == State.SPINNING_UP) {
             drivetrain.stopDriving();
