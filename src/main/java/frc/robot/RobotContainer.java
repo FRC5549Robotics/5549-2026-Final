@@ -298,8 +298,8 @@ public class RobotContainer {
 
                     // Wait 1.5 sec, then run shooting() continuously
                     new SequentialCommandGroup(
-                        new WaitCommand(1.5),
-                        new RunCommand(m_pivot::shooting, m_pivot)
+                        new WaitCommand(1.5)
+                        //new RunCommand(m_pivot::shooting, m_pivot)
                     )
                 )
             )
@@ -320,7 +320,7 @@ public class RobotContainer {
         //setpoint for passing
         m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
 
-        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1600), m_shooter));
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1200), m_shooter));
         
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
     }

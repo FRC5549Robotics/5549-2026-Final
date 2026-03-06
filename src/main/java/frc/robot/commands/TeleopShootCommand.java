@@ -3,6 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -33,6 +34,7 @@ public class TeleopShootCommand extends Command {
     private final BooleanSupplier allowAutoPivot;
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    Boolean second = false;
 
     private final LinearFilter txFilter = LinearFilter.movingAverage(4);
 
@@ -75,6 +77,7 @@ public class TeleopShootCommand extends Command {
 
     @Override
     public void execute() {
+        System.out.println(state);
         if (state == State.ALIGNING) {
             double rotationOutput = 0;
 
@@ -108,6 +111,16 @@ public class TeleopShootCommand extends Command {
                 case 27:
                     desiredPipeline = 2;
                     break;
+                case 1:
+                case 12:
+                case 6:
+                case 7:
+                case 17:
+                case 28:
+                case 22:
+                case 23:
+                    desiredPipeline = 3;
+                    break;
                 };
 
                 if (desiredPipeline != lastPipeline) {
@@ -127,11 +140,20 @@ public class TeleopShootCommand extends Command {
                 if (!Double.isNaN(tx)) {
 
                     if (Math.abs(tx) > tolerance) { //initial tolerance
+
                         omega += Math.copySign(kS, omega);
                         rotationOutput = omega;
                     } else {
                         omega = 0.0;
-                        state = State.SPINNING_UP;
+                        if(second){
+                            if (desiredPipeline != 3){
+                            state = State.SPINNING_UP;
+                        }
+                        }
+                        else{
+                            second = true;
+                        }
+                        
                     }
                 }
             }
@@ -141,11 +163,12 @@ public class TeleopShootCommand extends Command {
         }
 
         if (state == State.SPINNING_UP || state == State.SHOOTING) {
-            drivetrain.applyRequest(() -> brake).schedule();
+            drivetrain.setControl(brake);
         }
 
 
         if (state == State.SPINNING_UP) {
+            second = true;
             drivetrain.stopDriving();
 
             double distance = limelight.getDistanceToTagMeters();
@@ -162,6 +185,7 @@ public class TeleopShootCommand extends Command {
             if (shooter.atSpeed()) {
                 shootTimer.reset();
                 shootTimer.start();
+                new WaitCommand(0.25);
                 state = State.SHOOTING;
             }
             return;
@@ -179,11 +203,11 @@ public class TeleopShootCommand extends Command {
 
             belt.intake();
 
-            if (shootTimer.hasElapsed(2.5)) { //delay before the intake goes up and down
-                if (allowAutoPivot.getAsBoolean()) {
-                    intake.shooting();
-                }
-            }
+            //if (shootTimer.hasElapsed(2.5)) { //delay before the intake goes up and down
+                //if (allowAutoPivot.getAsBoolean()) {
+                   // intake.shooting();
+                //}
+            //}
 
             return;
         }
@@ -193,9 +217,12 @@ public class TeleopShootCommand extends Command {
     public void end(boolean interupted) {
         shooter.off();
         belt.off();
-        if (allowAutoPivot.getAsBoolean()) {
-            intake.shooting();
-        }
+        //if (allowAutoPivot.getAsBoolean()) {
+            //intake.shooting();
+        //
+        
+    
+    //}
         drivetrain.stopDriving();
     }
 

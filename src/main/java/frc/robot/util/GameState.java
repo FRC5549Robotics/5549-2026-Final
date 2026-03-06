@@ -15,7 +15,8 @@ public class GameState {
 
         String msg = DriverStation.getGameSpecificMessage();
         if (!msg.isEmpty()) {
-            redInactiveFirst = msg.charAt(0) == 'R';
+            redInactiveFirst = msg.
+            charAt(0) == 'R';
             hasGameData = true;
         }
     }
@@ -43,7 +44,7 @@ public class GameState {
         else if (matchTime > 82) return shift1Active; //shift 2
         else if (matchTime > 57) return !shift1Active; //shift 3
         else if (matchTime > 32) return shift1Active; //shift 4
-        else return true; //endgame is always active
+        else return false; //endgame is always active
 
     }
 

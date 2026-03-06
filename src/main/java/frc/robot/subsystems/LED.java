@@ -25,14 +25,16 @@ public class LED extends SubsystemBase {
     //define colors
     private static final RGBWColor GREEN = new RGBWColor(0, 255, 0, 0);
     private static final RGBWColor RED = new RGBWColor(255, 0, 0, 0);
+    //private static final RGBWColor RED = new RGBWColor(0, 255, 0, 0); //red override to green
     private static final RGBWColor PURPLE = new RGBWColor(185, 0, 255, 0);
+    //private static final RGBWColor PURPLE = new RGBWColor(0, 255, 0, 0); //purple override to green
 
     private LEDState currentState = null;
 
     private final Timer blinkTimer = new Timer();
     private boolean blinking = false;
     private double blinkPeriod = 1.0;
-    private static final double BLINK_START_TIME = 5.0;
+    private static final double BLINK_START_TIME = 10.0;
 
     public void setStateSupplier(Supplier<LEDState> supplier) {
         this.stateSupplier = supplier;

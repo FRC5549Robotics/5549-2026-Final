@@ -46,7 +46,7 @@ public class Shooter extends SubsystemBase {
   private final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0.28, 0.122);
 
   private boolean shooterEnabled = false;
-  private double targetRPM = 0.0;
+  private double targetRPM = 500.0;
 
   private final LinearFilter rpmFilter = LinearFilter.movingAverage(8);
 
@@ -95,13 +95,13 @@ public class Shooter extends SubsystemBase {
 
   public void off() {
     shooterEnabled = false;
-    targetRPM = 0.0;
+    targetRPM = 500.0;
     left.set(0);
   }
 
   public boolean atSpeed() {
     double currentRPM = left.getVelocity().getValueAsDouble() * 60;
-    if (targetRPM == 0.0) {
+    if (targetRPM == 500.0) {
       return false;
     }
     return Math.abs(currentRPM - targetRPM) < 50; //Is flywheel rpm within tolerance?

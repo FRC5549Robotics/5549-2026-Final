@@ -101,6 +101,16 @@ public class AutoShootCommand extends Command {
                 case 27:
                     desiredPipeline = 2;
                     break;
+                case 1:
+                case 12:
+                case 6:
+                case 7:
+                case 17:
+                case 28:
+                case 22:
+                case 23:
+                    desiredPipeline = 3;
+                    break;
                 };
 
                 if (desiredPipeline != lastPipeline) {
@@ -123,7 +133,9 @@ public class AutoShootCommand extends Command {
                         rotationOutput = omega;
                     } else {
                         omega = 0.0;
-                        state = State.SPINNING_UP;
+                        if (desiredPipeline != 3){
+                            state = State.SPINNING_UP;
+                        }
                     }
                 }
             }
