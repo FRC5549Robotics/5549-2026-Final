@@ -246,7 +246,7 @@ public class AutoShootCommand extends Command {
 
            belt.intake();
 
-            if (shootTimer.hasElapsed(5)) {
+            if (shootTimer.hasElapsed(4)) {
                 intake.shooting();
             }
 
