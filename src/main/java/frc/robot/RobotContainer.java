@@ -140,8 +140,6 @@ public class RobotContainer {
         
     //     autoChooser = AutoBuilder.buildAutoChooser();
         
-        
-        
         NamedCommands.registerCommand("RunBelt", new InstantCommand(m_belt::intake));
         NamedCommands.registerCommand("WaitAndBelt", beltCommand());
         NamedCommands.registerCommand("PivotUp", new StartEndCommand(

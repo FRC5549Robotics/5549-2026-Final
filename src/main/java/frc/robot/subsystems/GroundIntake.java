@@ -46,7 +46,7 @@ public class GroundIntake extends SubsystemBase {
 
         intakeMotor = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker");
         TalonFXConfiguration intakeConfig = new TalonFXConfiguration();
-        intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         intakeConfig.CurrentLimits.StatorCurrentLimit = 60;
         intakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -79,7 +79,7 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void setPivotDown() {
-        intakeMotor.setControl(voltageRequest.withOutput(6)); //8
+        intakeMotor.setControl(voltageRequest.withOutput(7.75)); 
         if (getPivotPosition() < 265) {
             pivotMotor.set(-0.4);
             //System.out.println("Going Down");

@@ -22,7 +22,6 @@ import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-
 public class TeleopShootCommand extends Command {
     private final CommandSwerveDrivetrain drivetrain;
     private final Limelight limelight;
@@ -34,6 +33,7 @@ public class TeleopShootCommand extends Command {
     private final BooleanSupplier allowAutoPivot;
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+
     Boolean second = false;
 
     private final LinearFilter txFilter = LinearFilter.movingAverage(4);
@@ -42,200 +42,293 @@ public class TeleopShootCommand extends Command {
 
     private int lastPipeline = -1;
 
+    private int lockedTagID = -1;
+
+    private final Timer tagLostTimer = new Timer();
+
     private enum State {
-        ALIGNING,
-        SPINNING_UP,
-        SHOOTING
+       ALIGNING,
+       SPINNING_UP,
+       SHOOTING
     }
 
-    private State state = State.ALIGNING;
-    private final Timer shootTimer = new Timer();
 
-    public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
-        this.drivetrain = drivetrain;
-        this.limelight = limelight;
-        this.shooter = shooter;
-        this.hood = hood;
+   private State state = State.ALIGNING;
+   private final Timer shootTimer = new Timer();
 
-        this.belt = belt;
-        this.intake = intake;
-        this.allowAutoPivot = allowAutoPivot;
+   private final Timer alignTimer = new Timer();
 
-        addRequirements(drivetrain, shooter, hood, belt);
-    }
+   boolean waitingForPipeline = false;
 
-    public double getFilteredTX() {
-        if (!LimelightHelpers.getTV("limelight")) {
-            txFilter.reset();
-            return Double.NaN;
-        }
 
-        double rawTx = LimelightHelpers.getTX("limelight");
+   public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
+       this.drivetrain = drivetrain;
+       this.limelight = limelight;
+       this.shooter = shooter;
+       this.hood = hood;
 
-        return txFilter.calculate(rawTx);
-    }
 
-    @Override
-    public void execute() {
+       this.belt = belt;
+       this.intake = intake;
+       this.allowAutoPivot = allowAutoPivot;
+
+
+       addRequirements(drivetrain, shooter, hood, belt);
+   }
+
+
+   public double getFilteredTX() {
+        //if (!LimelightHelpers.getTV("limelight")) {
+           //txFilter.reset();
+           //return Double.NaN;
+        //}
+
+       double rawTx = LimelightHelpers.getTX("limelight");
+
+       return txFilter.calculate(rawTx);
+   }
+
+
+   @Override
+   public void execute() {
+        
+        if (waitingForPipeline) {
+            if (LimelightHelpers.getCurrentPipelineIndex("limelight") == lastPipeline) {
+                waitingForPipeline = false; // The switch is confirmed
+                txFilter.reset();
+            } else {
+                System.out.println("still waiting");
+                return; // Still waiting
+            }
+        }   
+
         System.out.println(state);
         if (state == State.ALIGNING) {
-            double rotationOutput = 0;
+           double rotationOutput = 0;
 
-            boolean hasTarget = LimelightHelpers.getTV("limelight");
 
-            if (hasTarget) {
+           boolean hasTarget = LimelightHelpers.getTV("limelight");
+           int seenTag = (int) LimelightHelpers.getFiducialID("limelight");
 
-                int tagID = (int) LimelightHelpers.getFiducialID("limelight");
 
-                int desiredPipeline = 0;
+           if (hasTarget) {
 
-                switch (tagID) {
-                // middle
-                case 5:
-                case 10:
-                case 2:
-                case 18:
-                case 26:
-                case 21:
-                    desiredPipeline = 0;
-                    break;
-                // right
-                case 8:
-                case 24:
-                    desiredPipeline = 1;
-                    break;
-                //left
-                case 9:
-                case 11:
-                case 25:
-                case 27:
-                    desiredPipeline = 2;
-                    break;
-                case 1:
-                case 12:
-                case 6:
-                case 7:
-                case 17:
-                case 28:
-                case 22:
-                case 23:
-                    desiredPipeline = 3;
-                    break;
-                };
 
-                if (desiredPipeline != lastPipeline) {
-                    LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
-                    lastPipeline = desiredPipeline;
+               if (lockedTagID == -1) {
+                   lockedTagID = seenTag;
+               }
+          
+               if (seenTag == lockedTagID) {
+                   tagLostTimer.restart();
+               }
+          
+               else if (tagLostTimer.hasElapsed(0.3)) {
+                   lockedTagID = seenTag;
+                   tagLostTimer.restart();
+               }
+
+
+               int desiredPipeline = 0;
+
+
+               switch (lockedTagID) {
+               // middle
+               case 5:
+               case 10:
+               case 2:
+               case 18:
+               case 26:
+               case 21:
+                   desiredPipeline = 0;
+                   break;
+               // right
+               case 8:
+               case 24:
+                   desiredPipeline = 1;
+                   break;
+               //left
+               case 9:
+               case 11:
+               case 25:
+               case 27:
+                   desiredPipeline = 2;
+                   break;
+               case 1:
+               case 12:
+               case 6:
+               case 7:
+               case 17:
+               case 28:
+               case 22:
+               case 23:
+                   desiredPipeline = 3;
+                   break;
+               };
+
+
+               if (desiredPipeline != lastPipeline) {
+                   LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
+
+                    waitingForPipeline = true;
+
+                   lastPipeline = desiredPipeline;
+
+                   drivetrain.aimDrive(0, 0, 0);
+                   return;
+               }
+
+               double tx = getFilteredTX();
+               double kP = 0.011;
+               double kS = 0.35;
+               double tolerance = 0.75;
+               double omega = tx * -kP * MaxAngularRate;
+
+               System.out.println(tx);
+
+
+                if (hasTarget && !Double.isNaN(tx)) {
+                    if (Math.abs(tx) > tolerance) {
+
+                    omega += Math.copySign(kS, omega);
+                    rotationOutput = omega;
+
+                    alignTimer.stop();
+                    alignTimer.reset();
+
+                    } else {
+                    omega = 0.0;
+
+                if (!alignTimer.isRunning()) {
+                    alignTimer.restart();
                 }
 
-
-                double tx = getFilteredTX();
-                double kP = 0.014;
-                double kS = 0.1;
-                double tolerance = 0.75;
-                double omega = tx * -kP * MaxAngularRate;
-
-                System.out.println(tx);
-
-                if (!Double.isNaN(tx)) {
-
-                    if (Math.abs(tx) > tolerance) { //initial tolerance
-
-                        omega += Math.copySign(kS, omega);
-                        rotationOutput = omega;
-                    } else {
-                        omega = 0.0;
-                        if(second){
-                            if (desiredPipeline != 3){
-                            state = State.SPINNING_UP;
-                        }
-                        }
-                        else{
-                            second = true;
-                        }
-                        
+                if (alignTimer.hasElapsed(0.15)) { // time inside tolerance
+                    if (desiredPipeline != 3) {
+                        state = State.SPINNING_UP;
                     }
                 }
             }
-
-            drivetrain.aimDrive(0.0, 0.0, rotationOutput);
-            return;
-        }
-
-        if (state == State.SPINNING_UP || state == State.SHOOTING) {
-            drivetrain.setControl(brake);
-        }
-
-
-        if (state == State.SPINNING_UP) {
-            second = true;
-            drivetrain.stopDriving();
-
-            double distance = limelight.getDistanceToTagMeters();
-            SmartDashboard.putNumber("Distance", distance);
-
-            if (distance <= 0) {
-                return;
+               }
+            } else {
+               // If we see nothing, allow switching soon
+               if (tagLostTimer.hasElapsed(0.2)) {
+                   lockedTagID = -1;
+               }
             }
+            
 
-            ShooterState shot = ShooterLookup.get(distance);
-            hood.setAngle(shot.hoodAngleDeg);
-            shooter.shoot(shot.flywheelRPM);
 
-            if (shooter.atSpeed()) {
-                shootTimer.reset();
-                shootTimer.start();
-                new WaitCommand(0.25);
-                state = State.SHOOTING;
-            }
-            return;
-            }
-        if (state == State.SHOOTING) {
-            //if (Math.abs(getFilteredTX()) > 5.0) { //check if it goes out of tolerance
-                //belt.off();
-                //intake.off();
-                //state = State.ALIGNING;
-            //}
+           drivetrain.aimDrive(0.0, 0.0, rotationOutput);
+           return;
+       }
 
-            if (!shooter.atSpeed()) {
-                belt.off();
-            }
 
-            belt.intake();
+       if (state == State.SPINNING_UP || state == State.SHOOTING) {
+           drivetrain.setControl(brake);
+       }
 
-            //if (shootTimer.hasElapsed(2.5)) { //delay before the intake goes up and down
-                //if (allowAutoPivot.getAsBoolean()) {
-                   // intake.shooting();
-                //}
-            //}
+       if (state == State.SPINNING_UP) {
+           second = true;
+           drivetrain.stopDriving();
 
-            return;
-        }
-    }
 
-    @Override
-    public void end(boolean interupted) {
-        shooter.off();
-        belt.off();
-        //if (allowAutoPivot.getAsBoolean()) {
-            //intake.shooting();
-        //
-        
-    
-    //}
-        drivetrain.stopDriving();
-    }
+           double distance = limelight.getDistanceToTagMeters();
+           SmartDashboard.putNumber("Distance", distance);
 
-    @Override
-    public boolean isFinished() {
-        return false;
-    }
 
-    @Override
-    public void initialize() {
-        state = State.ALIGNING;
-        txFilter.reset();
-        shootTimer.stop();
-        shootTimer.reset();
-    }
+           if (distance <= 0) {
+               return;
+           }
+
+
+           ShooterState shot = ShooterLookup.get(distance);
+           hood.setAngle(shot.hoodAngleDeg);
+           shooter.shoot(shot.flywheelRPM);
+
+
+           if (shooter.atSpeed()) {
+
+
+               if (!shootTimer.isRunning()) {
+                   shootTimer.reset();
+                   shootTimer.start();
+               }
+          
+               if (shootTimer.hasElapsed(0.1)) {
+                   state = State.SHOOTING;
+               }
+          
+           } else {
+               shootTimer.stop();
+               shootTimer.reset();
+           }
+           return;
+           }
+       if (state == State.SHOOTING) {
+           //if (Math.abs(getFilteredTX()) > 5.0) { //check if it goes out of tolerance
+               //belt.off();
+               //intake.off();
+               //state = State.ALIGNING;
+           //}
+
+
+           if (!shooter.atSpeed()) {
+               belt.off();
+           }
+
+
+           belt.intake();
+
+
+           //if (shootTimer.hasElapsed(2.5)) { //delay before the intake goes up and down
+               //if (allowAutoPivot.getAsBoolean()) {
+                  // intake.shooting();
+               //}
+           //}
+
+
+           return;
+       }
+   }
+
+
+   @Override
+   public void end(boolean interupted) {
+       shooter.off();
+       belt.off();
+       //if (allowAutoPivot.getAsBoolean()) {
+           //intake.shooting();
+       //
+      
+  
+   //}
+       drivetrain.stopDriving();
+   }
+
+
+   @Override
+   public boolean isFinished() {
+       return false;
+   }
+
+
+   @Override
+   public void initialize() {
+       state = State.ALIGNING;
+       txFilter.reset();
+       shootTimer.stop();
+       shootTimer.reset();
+
+
+       lockedTagID = -1;
+       lastPipeline = -1;
+       tagLostTimer.reset();
+       tagLostTimer.start();
+
+       second = false;
+       waitingForPipeline = false;
+
+       alignTimer.stop();
+        alignTimer.reset();
+   }
 }

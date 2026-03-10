@@ -31,6 +31,9 @@ public class AutoShootCommand extends Command {
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     private int lastPipeline = -1;
+    private int lockedTagID = -1;
+
+    Boolean second = false;
 
     private enum State {
         ALIGNING,
@@ -41,6 +44,12 @@ public class AutoShootCommand extends Command {
 
     private State state = State.ALIGNING;
     private final Timer shootTimer = new Timer();
+
+    private final Timer alignTimer = new Timer();
+
+    private final Timer tagLostTimer = new Timer();
+
+    boolean waitingForPipeline = false;
 
     public AutoShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake) {
         this.drivetrain = drivetrain;
@@ -54,32 +63,57 @@ public class AutoShootCommand extends Command {
     }
 
     public double getFilteredTX() {
-        System.out.println("autoing");
-        if (!LimelightHelpers.getTV("limelight")) {
-            txFilter.reset();
-            return Double.NaN;
-        }
+        //if (!LimelightHelpers.getTV("limelight")) {
+           //txFilter.reset();
+           //return Double.NaN;
+        //}
 
-        double rawTx = LimelightHelpers.getTX("limelight");
+       double rawTx = LimelightHelpers.getTX("limelight");
 
-        return txFilter.calculate(rawTx);
+       return txFilter.calculate(rawTx);
     }
+
 
     @Override
     public void execute() {
+
+        if (waitingForPipeline) {
+            if (LimelightHelpers.getCurrentPipelineIndex("limelight") == lastPipeline) {
+                waitingForPipeline = false; // The switch is confirmed
+                txFilter.reset();
+            } else {
+                System.out.println("still waiting");
+                return; // Still waiting
+            }
+        }   
+
         System.out.println(state);
         if (state == State.ALIGNING) {
             double rotationOutput = 0;
 
             boolean hasTarget = LimelightHelpers.getTV("limelight");
+            int seenTag = (int) LimelightHelpers.getFiducialID("limelight");
 
             if (hasTarget) {
+
+                if (lockedTagID == -1) {
+                   lockedTagID = seenTag;
+               }
+          
+               if (seenTag == lockedTagID) {
+                   tagLostTimer.restart();
+               }
+          
+               else if (tagLostTimer.hasElapsed(0.3)) {
+                   lockedTagID = seenTag;
+                   tagLostTimer.restart();
+               }
 
                 int tagID = (int) LimelightHelpers.getFiducialID("limelight");
 
                 int desiredPipeline = 0;
 
-                switch (tagID) {
+                switch (lockedTagID) {
                 // middle
                 case 5:
                 case 10:
@@ -113,59 +147,104 @@ public class AutoShootCommand extends Command {
                     break;
                 };
 
-                if (desiredPipeline != lastPipeline) {
-                    LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
-                    lastPipeline = desiredPipeline;
-                }
+               if (desiredPipeline != lastPipeline) {
+                   LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
+
+                    waitingForPipeline = true;
+
+                   lastPipeline = desiredPipeline;
+
+                   drivetrain.aimDrive(0, 0, 0);
+                   return;
+               }
 
                 double tx = getFilteredTX();
-                double kP = 0.014;
-                double kS = 0.1;
+                double kP = 0.011;
+                double kS = 0.35;
                 double tolerance = 0.75;
                 double omega = tx * -kP * MaxAngularRate;
 
                 System.out.println(tx);
 
-                if (!Double.isNaN(tx)) {
+                if (hasTarget && !Double.isNaN(tx)) {
+                    if (Math.abs(tx) > tolerance) {
 
-                    if (Math.abs(tx) > tolerance) { //initial tolerance
-                        omega += Math.copySign(kS, omega);
-                        rotationOutput = omega;
+                    omega += Math.copySign(kS, omega);
+                    rotationOutput = omega;
+
+                    alignTimer.stop();
+                    alignTimer.reset();
+
                     } else {
-                        omega = 0.0;
-                        if (desiredPipeline != 3){
-                            state = State.SPINNING_UP;
-                        }
+                    omega = 0.0;
+
+                if (!alignTimer.isRunning()) {
+                    alignTimer.restart();
+                }
+
+                if (alignTimer.hasElapsed(0.15)) { // time inside tolerance
+                    if (desiredPipeline != 3) {
+                        state = State.SPINNING_UP;
                     }
                 }
             }
+               }
+            } else {
+               // If we see nothing, allow switching soon
+               if (tagLostTimer.hasElapsed(0.2)) {
+                   lockedTagID = -1;
+               }
+            }
+            
 
             drivetrain.aimDrive(0.0, 0.0, rotationOutput);
             return;
         }
 
-        if (state == State.SPINNING_UP) {
-            drivetrain.stopDriving();
+       if (state == State.SPINNING_UP) {
+           second = true;
+           drivetrain.stopDriving();
 
-            double distance = limelight.getDistanceToTagMeters();
 
-            if (distance <= 0) {
-                return;
-            }
+           double distance = limelight.getDistanceToTagMeters();
+           SmartDashboard.putNumber("Distance", distance);
 
-            ShooterState shot = ShooterLookup.get(distance);
-            hood.setAngle(shot.hoodAngleDeg);
-            shooter.shoot(shot.flywheelRPM);
 
-            if (shooter.atSpeed() && hood.atTarget()) {
-                shootTimer.reset();
-                shootTimer.start();
-                state = State.SHOOTING;
-            }
-            return;
-        }
+           if (distance <= 0) {
+               return;
+           }
+
+
+           ShooterState shot = ShooterLookup.get(distance);
+           hood.setAngle(shot.hoodAngleDeg);
+           shooter.shoot(shot.flywheelRPM);
+
+
+           if (shooter.atSpeed()) {
+
+
+               if (!shootTimer.isRunning()) {
+                   shootTimer.reset();
+                   shootTimer.start();
+               }
+          
+                if (shootTimer.hasElapsed(0.1)) {
+                    shootTimer.restart();
+                    state = State.SHOOTING;
+                }
+          
+           } else {
+               shootTimer.stop();
+               shootTimer.reset();
+           }
+           return;
+           }
         if (state == State.SHOOTING) {
-            belt.intake();
+           if (!shooter.atSpeed()) {
+               belt.off();
+           }
+
+           belt.intake();
 
             if (shootTimer.hasElapsed(5)) {
                 intake.shooting();
@@ -193,11 +272,23 @@ public class AutoShootCommand extends Command {
         return state == State.DONE;
     }
 
-    @Override
-    public void initialize() {
-        state = State.ALIGNING;
-        txFilter.reset();
-        shootTimer.stop();
-        shootTimer.reset();
-    }
+   @Override
+   public void initialize() {
+       state = State.ALIGNING;
+       txFilter.reset();
+       shootTimer.stop();
+       shootTimer.reset();
+
+
+       lockedTagID = -1;
+       lastPipeline = -1;
+       tagLostTimer.reset();
+       tagLostTimer.start();
+
+       second = false;
+       waitingForPipeline = false;
+
+       alignTimer.stop();
+        alignTimer.reset();
+   }
 }
