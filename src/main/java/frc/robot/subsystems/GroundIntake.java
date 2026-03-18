@@ -25,6 +25,8 @@ public class GroundIntake extends SubsystemBase {
     private final double PIVOT_UP_POSITION   = 145;
     private final double PIVOT_DOWN_POSITION = 268;
 
+    private boolean holdingAtTop = false;
+
     private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
 
     public GroundIntake() {
@@ -37,7 +39,7 @@ public class GroundIntake extends SubsystemBase {
         );
 
         SparkMaxConfig pivotConfig = new SparkMaxConfig();
-        pivotConfig.idleMode(IdleMode.kCoast);
+        pivotConfig.idleMode(IdleMode.kBrake);
         pivotMotor.configure(
             pivotConfig,
             com.revrobotics.ResetMode.kResetSafeParameters,
@@ -68,18 +70,20 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void setPivotUp() {
-        if (getPivotPosition() > 210) {
+        if (getPivotPosition() > 220) {
             pivotMotor.set(0.4);
             //System.out.println("Going Up");
         } else {
             pivotMotor.set(0.0);
             intakeMotor.set(0.0);
+            holdingAtTop = true;
             System.out.println("All the way up");
         }
     }
 
     public void setPivotDown() {
-        intakeMotor.setControl(voltageRequest.withOutput(7.75)); 
+        holdingAtTop = false;
+        intakeMotor.setControl(voltageRequest.withOutput(6)); 
         if (getPivotPosition() < 265) {
             pivotMotor.set(-0.4);
             //System.out.println("Going Down");
@@ -89,6 +93,7 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void shooting() {
+        holdingAtTop = false;
         double pos = getPivotPosition();
         
         System.out.println(pos);

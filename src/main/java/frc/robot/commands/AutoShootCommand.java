@@ -94,6 +94,8 @@ public class AutoShootCommand extends Command {
             boolean hasTarget = LimelightHelpers.getTV("limelight");
             int seenTag = (int) LimelightHelpers.getFiducialID("limelight");
 
+            shooter.shoot(1000);
+
             if (hasTarget) {
 
                 if (lockedTagID == -1) {
@@ -104,7 +106,7 @@ public class AutoShootCommand extends Command {
                    tagLostTimer.restart();
                }
           
-               else if (tagLostTimer.hasElapsed(0.3)) {
+               else if (tagLostTimer.hasElapsed(1)) {
                    lockedTagID = seenTag;
                    tagLostTimer.restart();
                }
@@ -159,7 +161,7 @@ public class AutoShootCommand extends Command {
                }
 
                 double tx = getFilteredTX();
-                double kP = 0.011;
+                double kP = 0.005549;
                 double kS = 0.35;
                 double tolerance = 0.75;
                 double omega = tx * -kP * MaxAngularRate;
@@ -191,7 +193,7 @@ public class AutoShootCommand extends Command {
                }
             } else {
                // If we see nothing, allow switching soon
-               if (tagLostTimer.hasElapsed(0.2)) {
+               if (tagLostTimer.hasElapsed(1)) {
                    lockedTagID = -1;
                }
             }
@@ -253,6 +255,7 @@ public class AutoShootCommand extends Command {
             if (shootTimer.hasElapsed(15)) {
                 belt.off();
                 intake.off();
+                shooter.off();
                 state = State.DONE;
             }
             return;

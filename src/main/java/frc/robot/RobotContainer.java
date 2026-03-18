@@ -218,7 +218,6 @@ public class RobotContainer {
         m_driver.rightBumper()
             .whileTrue(
                 new ParallelCommandGroup(
-                new InstantCommand(() -> m_shooter.shoot(1500), m_shooter),
                 new TeleopShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot, () -> !(m_operator.getRawAxis(1) > Constants.TRIGGER_DEADBAND && groundIntakeShakeButton.getAsBoolean())))
             )
             .onFalse(
@@ -265,16 +264,16 @@ public class RobotContainer {
         //operator intake controls
         m_operator.axisGreaterThan(1, Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotDown, m_pivot)).onFalse(new InstantCommand(m_pivot::off, m_pivot)); 
         m_operator.axisLessThan(1, -Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotUp, m_pivot)).onFalse(new InstantCommand(m_pivot::off, m_pivot)); 
-        groundIntakeShakeButton.whileTrue(new RunCommand(m_pivot::shooting, m_pivot)); //RB to shake
+        //groundIntakeShakeButton.whileTrue(new RunCommand(m_pivot::shooting, m_pivot)); //RB to shake
         //Belt unjam
         m_operator.leftBumper().onTrue(new InstantCommand(m_belt:: jammed)).onFalse(new InstantCommand(m_belt:: off));
         //driver intake controls
         m_pivot.setDefaultCommand(new RunCommand(() -> {
             if (m_driver.getRightTriggerAxis() > Constants.TRIGGER_DEADBAND) {
                 m_pivot.setPivotUp();
-            } else {
-                m_pivot.setPivotDown();
-            }
+            } //else {
+                //m_pivot.setPivotDown();
+            //}
             }, m_pivot)
         );
         //Operator shoots balls

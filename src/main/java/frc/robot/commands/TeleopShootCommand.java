@@ -110,6 +110,7 @@ public class TeleopShootCommand extends Command {
            boolean hasTarget = LimelightHelpers.getTV("limelight");
            int seenTag = (int) LimelightHelpers.getFiducialID("limelight");
 
+            shooter.shoot(1000);
 
            if (hasTarget) {
 
@@ -122,7 +123,7 @@ public class TeleopShootCommand extends Command {
                    tagLostTimer.restart();
                }
           
-               else if (tagLostTimer.hasElapsed(0.3)) {
+               else if (tagLostTimer.hasElapsed(1)) {
                    lockedTagID = seenTag;
                    tagLostTimer.restart();
                }
@@ -166,6 +167,7 @@ public class TeleopShootCommand extends Command {
                };
 
 
+
                if (desiredPipeline != lastPipeline) {
                    LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
 
@@ -178,7 +180,7 @@ public class TeleopShootCommand extends Command {
                }
 
                double tx = getFilteredTX();
-               double kP = 0.011;
+               double kP = 0.005549;
                double kS = 0.35;
                double tolerance = 0.75;
                double omega = tx * -kP * MaxAngularRate;
@@ -211,7 +213,7 @@ public class TeleopShootCommand extends Command {
                }
             } else {
                // If we see nothing, allow switching soon
-               if (tagLostTimer.hasElapsed(0.2)) {
+               if (tagLostTimer.hasElapsed(1)) {
                    lockedTagID = -1;
                }
             }
@@ -254,7 +256,7 @@ public class TeleopShootCommand extends Command {
                    shootTimer.start();
                }
           
-               if (shootTimer.hasElapsed(0.1)) {
+               if (shootTimer.hasElapsed(0.2)) {
                    state = State.SHOOTING;
                }
           

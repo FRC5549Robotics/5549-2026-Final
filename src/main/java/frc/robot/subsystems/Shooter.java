@@ -46,7 +46,7 @@ public class Shooter extends SubsystemBase {
   private final SimpleMotorFeedforward ff = new SimpleMotorFeedforward(0.28, 0.122);
 
   private boolean shooterEnabled = false;
-  private double targetRPM = 500.0;
+  private double targetRPM = 0.0;
 
   private final LinearFilter rpmFilter = LinearFilter.movingAverage(8);
 
@@ -63,11 +63,12 @@ public class Shooter extends SubsystemBase {
 
     // Optional: set some starting slot gains on the Talon itself (closed-loop velocity P/I/D).
     // These are NOT the same as your WPILib PID values.
-    cfg.Slot0.kP = 0.00;  // start small, tune
+    cfg.Slot0.kP = 0.6;  // start small, tune
     cfg.Slot0.kI = 0.00;
     cfg.Slot0.kD = 0.00;
 
-    cfg.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.05; //0.05 seconds to reach max velocity
+
+    cfg.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.00; //0.00 seconds to reach max velocity
 
     left.getConfigurator().apply(cfg);
     right.getConfigurator().apply(cfg);
@@ -95,13 +96,13 @@ public class Shooter extends SubsystemBase {
 
   public void off() {
     shooterEnabled = false;
-    targetRPM = 500.0;
-    left.set(0);
+    targetRPM = 0.0;
+    left.stopMotor();
   }
 
   public boolean atSpeed() {
     double currentRPM = left.getVelocity().getValueAsDouble() * 60;
-    if (targetRPM == 500.0) {
+    if (targetRPM == 0.0) {
       return false;
     }
     return Math.abs(currentRPM - targetRPM) < 50; //Is flywheel rpm within tolerance?
@@ -125,11 +126,16 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
 
     // Command velocity with arbitrary feedforward voltage
-    left.setControl(
-        leftVelReq
+
+    if (shooterEnabled && targetRPM > 0.0) {
+        left.setControl(
+          leftVelReq
             .withVelocity(targetRPS)     // RPS
             .withFeedForward(ffVolts)    // volts
-    );
+        );
+    } else {
+      left.stopMotor();
+    }
 
   }
 
