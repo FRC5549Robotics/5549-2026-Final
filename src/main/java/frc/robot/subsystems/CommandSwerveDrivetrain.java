@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -30,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Vision.LimelightHelpers;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -335,6 +338,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void periodic() {
 
         m_field.setRobotPose(getPose());
+
+        var mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+
+        if (mt2 != null && mt2.tagCount > 0) {
+            Pose2d visionPose = mt2.pose;
+            Pose2d currentPose = getPose();
+
+            double error = currentPose.getTranslation().getDistance(visionPose.getTranslation());
+
+            // Reject bad vision
+            if (error < 1.0) {
+                addVisionMeasurement(visionPose, mt2.timestampSeconds);
+            }
+
+        }
+
+        Logger.recordOutput("RobotPose", getPose());
 
         /*
          * Periodically try to apply the operator perspective.

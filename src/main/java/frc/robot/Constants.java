@@ -6,9 +6,14 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -207,4 +212,15 @@ public final class Constants {
     public static final int HOOD_MOTOR_ID = 13;
     //CANdle
     public static final int CANDLE_ID = 19;
+
+    //Hub positions
+
+    public static final AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+
+    public static final double width = Units.inchesToMeters(47.0);
+    public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
+    public static final double innerWidth = Units.inchesToMeters(41.7);
+    public static final double innerHeight = Units.inchesToMeters(56.5);
+
+    public static final Pose2d BLUE_HUB = layout.getTagPose
 } 
