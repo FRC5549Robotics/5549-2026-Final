@@ -161,7 +161,7 @@ public class AutoShootCommand extends Command {
                }
 
                 double tx = getFilteredTX();
-                double kP = 0.005549;
+                double kP = 0.01;
                 double kS = 0.35;
                 double tolerance = 0.75;
                 double omega = tx * -kP * MaxAngularRate;

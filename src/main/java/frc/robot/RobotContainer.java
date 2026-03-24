@@ -150,13 +150,13 @@ public class RobotContainer {
         );
         NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
         NamedCommands.registerCommand("PivotDownAndIntake", new StartEndCommand(
-                () -> m_pivot.setPivotDown(), //what to run while active
+                () -> m_pivot.setPivotDownFast(), //what to run while active
                 () -> m_pivot.off(), //what to run to end it
                 m_pivot
-            ).withTimeout(3) //how long to run it
+            ).withTimeout(5) //how long to run it
         );
         NamedCommands.registerCommand("PivotDownAndIntakeFull", new StartEndCommand(
-                () -> m_pivot.setPivotDown(), //what to run while active
+                () -> m_pivot.setPivotDownFast(), //what to run while active
                 () -> m_pivot.off(), //what to run to end it
                 m_pivot
             ).withTimeout(6) //how long to run it
@@ -170,8 +170,9 @@ public class RobotContainer {
             "AutoShootCommand",
             new SequentialCommandGroup(
                 new ZeroHood(m_hood),
-                new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
-                .withTimeout(15)
+                new ParallelCommandGroup(new InstantCommand(m_pivot:: IntakeOn), new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
+                .withTimeout(15))
+                
             )
         );
 
@@ -246,6 +247,7 @@ public class RobotContainer {
         m_driver.back().and(m_driver.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
         m_driver.start().and(m_driver.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         m_driver.start().and(m_driver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        m_driver.axisGreaterThan(3, .7).whileTrue(new RunCommand(m_pivot:: setPivotUp )).onFalse(new InstantCommand(m_pivot:: off));
 
         //m_driver.pov(0).whileTrue(Commands.run(() -> m_shooter.runCharacterization(2.0), m_shooter));
         //m_driver.pov(180).whileTrue(Commands.run(() -> m_shooter.runCharacterization(8.0), m_shooter));
@@ -270,7 +272,7 @@ public class RobotContainer {
         //driver intake controls
         m_pivot.setDefaultCommand(new RunCommand(() -> {
             if (m_driver.getRightTriggerAxis() > Constants.TRIGGER_DEADBAND) {
-                m_pivot.setPivotUp();
+                //m_pivot.setPivotUp();
             } //else {
                 //m_pivot.setPivotDown();
             //}
@@ -304,22 +306,21 @@ public class RobotContainer {
             )
             .onFalse(
                 new ParallelCommandGroup(
-                    new InstantCommand(m_belt::off, m_belt),
-                    new InstantCommand(m_pivot::off, m_pivot)
+                    new InstantCommand(m_belt::off, m_belt)
                 )
             );
 
         //setpoint for shooting close to hub
         m_operator.button(4).onTrue(new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
 
-        m_operator.button(4).whileTrue(new RunCommand(() -> m_shooter.shoot(1721), m_shooter));
+        m_operator.button(4).whileTrue(new RunCommand(() -> m_shooter.shoot(1760), m_shooter));
         
         m_operator.button(4).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
         //setpoint for passing
         m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
 
-        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1200), m_shooter));
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(2000), m_shooter));
         
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
     }

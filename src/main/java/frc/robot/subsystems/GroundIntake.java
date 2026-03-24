@@ -83,7 +83,19 @@ public class GroundIntake extends SubsystemBase {
 
     public void setPivotDown() {
         holdingAtTop = false;
-        intakeMotor.setControl(voltageRequest.withOutput(6)); 
+        intakeMotor.setControl(voltageRequest.withOutput(10)); //6
+        if (getPivotPosition() < 275.5) {
+            pivotMotor.set(-0.4);
+            //System.out.println("Going Down");
+        } else {
+            pivotMotor.set(0.0);
+        }
+    }
+
+    
+    public void setPivotDownFast() {
+        holdingAtTop = false;
+        intakeMotor.setControl(voltageRequest.withOutput(12)); 
         if (getPivotPosition() < 265) {
             pivotMotor.set(-0.4);
             //System.out.println("Going Down");
@@ -108,10 +120,15 @@ public class GroundIntake extends SubsystemBase {
         intakeMotor.set(0.3);
     }
 
+    public void IntakeOn(){
+        intakeMotor.set(.3);
+    }
+
     public void off() {
         //System.out.println("pivotDisabled");
         intakeMotor.set(0.0);
         pivotMotor.set(0.0);
+        holdingAtTop = false;
     }
 
     @Override
@@ -122,6 +139,10 @@ public class GroundIntake extends SubsystemBase {
         SmartDashboard.putNumber("GI DIO Channel", Constants.PIVOT_ABS_ENC_DIO);
         SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected());
         SmartDashboard.putNumber("GI Enc Degrees", raw);
+
+        if (holdingAtTop) {
+            pivotMotor.set(0.1);
+        }
 
     }
 }
