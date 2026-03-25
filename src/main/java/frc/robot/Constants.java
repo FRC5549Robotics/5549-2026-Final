@@ -7,6 +7,7 @@ package frc.robot;
 import com.ctre.phoenix6.CANBus;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -215,12 +216,24 @@ public final class Constants {
 
     //Hub positions
 
-    public static final AprilTagFieldLayout layout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+    public static final AprilTagFieldLayout layout = AprilTagFields.k2026RebuiltAndymark.loadAprilTagLayoutField();
 
     public static final double width = Units.inchesToMeters(47.0);
     public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
     public static final double innerWidth = Units.inchesToMeters(41.7);
     public static final double innerHeight = Units.inchesToMeters(56.5);
 
-    public static final Pose2d BLUE_HUB = layout.getTagPose
+    public static final double fieldWidth = layout.getFieldWidth();
+
+    public static final Pose2d BLUE_HUB = new Pose2d(
+      layout.getTagPose(26).get().toPose2d().getX() + width / 2.0, 
+      fieldWidth / 2.0,
+      new Rotation2d()
+    );
+
+    public static final Pose2d RED_HUB = new Pose2d(
+      layout.getTagPose(10).get().toPose2d().getX() + width / 2.0, 
+      fieldWidth / 2.0,
+      new Rotation2d()
+    );
 } 
