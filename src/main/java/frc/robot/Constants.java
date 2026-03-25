@@ -8,6 +8,7 @@ import com.ctre.phoenix6.CANBus;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -225,15 +226,17 @@ public final class Constants {
 
     public static final double fieldWidth = layout.getFieldWidth();
 
-    public static final Pose2d BLUE_HUB = new Pose2d(
-      layout.getTagPose(26).get().toPose2d().getX() + width / 2.0, 
-      fieldWidth / 2.0,
-      new Rotation2d()
+    public static final Pose2d BLUE_HUB = layout.getTagPose(26).get().toPose2d().transformBy(
+      new Transform2d(
+          new Translation2d(-width / 2.0, 0.0),
+          new Rotation2d()
+      )
     );
 
-    public static final Pose2d RED_HUB = new Pose2d(
-      layout.getTagPose(10).get().toPose2d().getX() + width / 2.0, 
-      fieldWidth / 2.0,
-      new Rotation2d()
+    public static final Pose2d Red_HUB = layout.getTagPose(10).get().toPose2d().transformBy(
+      new Transform2d(
+          new Translation2d(-width / 2.0, 0.0),
+          new Rotation2d()
+      )
     );
 } 
