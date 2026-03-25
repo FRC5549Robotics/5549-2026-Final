@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.DegreesPerSecond;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.spark.SparkMax;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -38,9 +39,9 @@ public class Hood extends SubsystemBase{
         HoodMotor = new TalonFX(Constants.HOOD_MOTOR_ID, "lil clanker");
         HoodMotorConfig = new TalonFXConfiguration();
 
-        HoodMotorConfig.CurrentLimits.StatorCurrentLimit = 60;
+        HoodMotorConfig.CurrentLimits.StatorCurrentLimit = 20; //used to be 60
         HoodMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        HoodMotorConfig.CurrentLimits.SupplyCurrentLimit = 25;
+        HoodMotorConfig.CurrentLimits.SupplyCurrentLimit = 20; //used to be 25
         HoodMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         HoodMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -53,6 +54,7 @@ public class Hood extends SubsystemBase{
         HoodMotorConfig.MotionMagic.MotionMagicAcceleration = 8; // cap on acceleration
 
         HoodMotor.getConfigurator().apply(HoodMotorConfig);
+
     }
 
     private double degreesToMotorRot(double deg) {

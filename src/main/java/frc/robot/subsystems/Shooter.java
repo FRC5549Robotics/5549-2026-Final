@@ -53,9 +53,9 @@ public class Shooter extends SubsystemBase {
   public Shooter() { //shooter constructor
     TalonFXConfiguration cfg = new TalonFXConfiguration();
 
-    cfg.CurrentLimits.StatorCurrentLimit = 120;
+    cfg.CurrentLimits.StatorCurrentLimit = 80; //used to be 120
     cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-    cfg.CurrentLimits.SupplyCurrentLimit = 50;
+    cfg.CurrentLimits.SupplyCurrentLimit = 30; //used to be 50
     cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Flywheels usually feel better on COAST, not BRAKE.

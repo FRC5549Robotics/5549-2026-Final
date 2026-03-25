@@ -37,9 +37,9 @@ public class Belt extends SubsystemBase{
         beltConfigs = new TalonFXConfiguration();
         beltConfigurator = belt_right.getConfigurator();
 
-        beltConfigs.CurrentLimits.StatorCurrentLimit = 60;
+        beltConfigs.CurrentLimits.StatorCurrentLimit = 40;
         beltConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
-        beltConfigs.CurrentLimits.SupplyCurrentLimit = 60;
+        beltConfigs.CurrentLimits.SupplyCurrentLimit = 30;
         beltConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         beltConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;

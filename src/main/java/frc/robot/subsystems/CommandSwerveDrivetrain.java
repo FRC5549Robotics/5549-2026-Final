@@ -24,10 +24,12 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -334,25 +336,55 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
+    private double lastVisionTime = 0;
+
     @Override
     public void periodic() {
 
-        m_field.setRobotPose(getPose());
+        double now = Timer.getFPGATimestamp();
 
-        var mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+        if (now - lastVisionTime > 0.1) {
+            lastVisionTime = now;
+            LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            System.out.println(mt2.tagCount);
+            if (mt2 != null && mt2.tagCount > 0) {
+                System.out.println("checking vision");
 
-        if (mt2 != null && mt2.tagCount > 0) {
-            Pose2d visionPose = mt2.pose;
-            Pose2d currentPose = getPose();
+                Pose2d visionPose = mt2.pose;
+                Pose2d currentPose = getPose();
 
-            double error = currentPose.getTranslation().getDistance(visionPose.getTranslation());
+                double error = currentPose.getTranslation().getDistance(visionPose.getTranslation());
 
-            // Reject bad vision
-            if (error < 1.0) {
-                addVisionMeasurement(visionPose, mt2.timestampSeconds);
+                boolean reject = false;
+
+                // Reject bad vision
+                if (error > 1.0) {
+                    System.out.println("rejection 1");
+                reject = true;
+                }
+
+                if (mt2.tagCount == 1 && error > 0.5) {
+                    System.out.println("rejection 2");
+                    reject = true;
+                }
+
+                double rotError = Math.abs(
+                    visionPose.getRotation().minus(currentPose.getRotation()).getRadians()
+                );
+
+                if (rotError > Units.degreesToRadians(45)) {
+                    System.out.println("rejection 3");
+                    reject = true;
+                }
+
+                if (!reject) {
+                    addVisionMeasurement(visionPose, mt2.timestampSeconds);
+                }
+                
             }
-
         }
+
+        m_field.setRobotPose(getPose());
 
         Logger.recordOutput("RobotPose", getPose());
 

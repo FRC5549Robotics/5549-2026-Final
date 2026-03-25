@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
@@ -47,6 +48,7 @@ public class Robot extends TimedRobot {
             Preferences.initDouble("Shooter_RPM_" + i, 0.0);
         }
 
+        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(100);
     }
 
     @Override
@@ -59,7 +61,9 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(100);
+    }
 
     @Override
     public void disabledPeriodic() {}
@@ -70,6 +74,8 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         new ZeroHood(m_robotContainer.getHood()).schedule();
+
+        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(0);
 
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -87,6 +93,8 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         new ZeroHood(m_robotContainer.getHood()).schedule();
+
+        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(0);
 
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);

@@ -5,13 +5,22 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+
 import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.GroundIntake;
-
+import frc.robot.Constants;
 import frc.robot.Vision.LimelightHelpers;
 import frc.robot.shooter.ShooterLookup;
 import frc.robot.shooter.ShooterState;
@@ -34,17 +43,7 @@ public class TeleopShootCommand extends Command {
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-    Boolean second = false;
-
-    private final LinearFilter txFilter = LinearFilter.movingAverage(4);
-
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
-    private int lastPipeline = -1;
-
-    private int lockedTagID = -1;
-
-    private final Timer tagLostTimer = new Timer();
 
     private enum State {
        ALIGNING,
@@ -52,14 +51,12 @@ public class TeleopShootCommand extends Command {
        SHOOTING
     }
 
-
    private State state = State.ALIGNING;
+
    private final Timer shootTimer = new Timer();
+    private final Timer alignTimer = new Timer();
 
-   private final Timer alignTimer = new Timer();
-
-   boolean waitingForPipeline = false;
-
+   private final PIDController rotationPID = new PIDController(4.0, 0.0, 0.3);
 
    public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
        this.drivetrain = drivetrain;
@@ -72,157 +69,68 @@ public class TeleopShootCommand extends Command {
        this.intake = intake;
        this.allowAutoPivot = allowAutoPivot;
 
+        rotationPID.enableContinuousInput(-Math.PI, Math.PI);
 
        addRequirements(drivetrain, shooter, hood, belt);
    }
 
+    private Pose2d getTargetPose() {
+        var alliance = DriverStation.getAlliance();
 
-   public double getFilteredTX() {
-        //if (!LimelightHelpers.getTV("limelight")) {
-           //txFilter.reset();
-           //return Double.NaN;
-        //}
-
-       double rawTx = LimelightHelpers.getTX("limelight");
-
-       return txFilter.calculate(rawTx);
-   }
-
+        if (alliance.isPresent() && alliance.get() == Alliance.Red) {
+            return Constants.RED_HUB;
+        } else {
+            return Constants.BLUE_HUB;
+        }
+    }
 
    @Override
    public void execute() {
-        
-        if (waitingForPipeline) {
-            if (LimelightHelpers.getCurrentPipelineIndex("limelight") == lastPipeline) {
-                waitingForPipeline = false; // The switch is confirmed
-                txFilter.reset();
-            } else {
-                System.out.println("still waiting");
-                return; // Still waiting
-            }
-        }   
 
         System.out.println(state);
         if (state == State.ALIGNING) {
-           double rotationOutput = 0;
+            Pose2d robotpose = drivetrain.getPose();
+            Pose2d targetPose = getTargetPose();
 
+            Translation2d delta = targetPose.getTranslation().minus(robotpose.getTranslation());
 
-           boolean hasTarget = LimelightHelpers.getTV("limelight");
-           int seenTag = (int) LimelightHelpers.getFiducialID("limelight");
+            double targetAngle = Math.atan2(delta.getY(), delta.getX());
 
-            shooter.shoot(1000);
+            double currentAngle = robotpose.getRotation().getRadians();
 
-           if (hasTarget) {
+            double omega = rotationPID.calculate(currentAngle, targetAngle);
 
+            omega = Math.max(Math.min(omega, MaxAngularRate), -MaxAngularRate);
 
-               if (lockedTagID == -1) {
-                   lockedTagID = seenTag;
-               }
-          
-               if (seenTag == lockedTagID) {
-                   tagLostTimer.restart();
-               }
-          
-               else if (tagLostTimer.hasElapsed(1)) {
-                   lockedTagID = seenTag;
-                   tagLostTimer.restart();
-               }
+            if (Math.abs(omega) > 0.01) {
+                omega += Math.copySign(0.35, omega);
+            }
 
+            double angleError = Math.abs(targetAngle - currentAngle);
 
-               int desiredPipeline = 0;
+            angleError = MathUtil.angleModulus(angleError);
 
-
-               switch (lockedTagID) {
-               // middle
-               case 5:
-               case 10:
-               case 2:
-               case 18:
-               case 26:
-               case 21:
-                   desiredPipeline = 0;
-                   break;
-               // right
-               case 8:
-               case 24:
-                   desiredPipeline = 1;
-                   break;
-               //left
-               case 9:
-               case 11:
-               case 25:
-               case 27:
-                   desiredPipeline = 2;
-                   break;
-               case 1:
-               case 12:
-               case 6:
-               case 7:
-               case 17:
-               case 28:
-               case 22:
-               case 23:
-                   desiredPipeline = 3;
-                   break;
-               };
-
-
-
-               if (desiredPipeline != lastPipeline) {
-                   LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
-
-                    waitingForPipeline = true;
-
-                   lastPipeline = desiredPipeline;
-
-                   drivetrain.aimDrive(0, 0, 0);
-                   return;
-               }
-
-               double tx = getFilteredTX();
-               double kP = 0.01;
-               double kS = 0.35;
-               double tolerance = 0.75;
-               double omega = tx * -kP * MaxAngularRate;
-
-               System.out.println(tx);
-
-
-                if (hasTarget && !Double.isNaN(tx)) {
-                    if (Math.abs(tx) > tolerance) {
-
-                    omega += Math.copySign(kS, omega);
-                    rotationOutput = omega;
-
-                    alignTimer.stop();
-                    alignTimer.reset();
-
-                    } else {
-                    omega = 0.0;
+            if (Math.abs(angleError) < Units.degreesToRadians(1)) {
 
                 if (!alignTimer.isRunning()) {
                     alignTimer.restart();
                 }
 
-                if (alignTimer.hasElapsed(0.15)) { // time inside tolerance
-                    if (desiredPipeline != 3) {
-                        state = State.SPINNING_UP;
-                    }
+                if (alignTimer.hasElapsed(0.15)) {
+                    state = State.SPINNING_UP;
                 }
-            }
-               }
+
+                omega = 0;
+
             } else {
-               // If we see nothing, allow switching soon
-               if (tagLostTimer.hasElapsed(1)) {
-                   lockedTagID = -1;
-               }
+                alignTimer.stop();
+                alignTimer.reset();
             }
-            
 
+            drivetrain.aimDrive(0.0, 0.0, omega);
 
-           drivetrain.aimDrive(0.0, 0.0, rotationOutput);
-           return;
-       }
+            return;
+        }
 
 
        if (state == State.SPINNING_UP || state == State.SHOOTING) {
@@ -230,18 +138,18 @@ public class TeleopShootCommand extends Command {
        }
 
        if (state == State.SPINNING_UP) {
-           second = true;
            drivetrain.stopDriving();
 
+            Pose2d robotPose = drivetrain.getPose();
+            Pose2d targetPose = getTargetPose();
 
-           double distance = limelight.getDistanceToTagMeters();
+            double distance = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+
            SmartDashboard.putNumber("Distance", distance);
-
 
            if (distance <= 0) {
                return;
            }
-
 
            ShooterState shot = ShooterLookup.get(distance);
            hood.setAngle(shot.hoodAngleDeg);
@@ -317,20 +225,10 @@ public class TeleopShootCommand extends Command {
    @Override
    public void initialize() {
        state = State.ALIGNING;
-       txFilter.reset();
        shootTimer.stop();
        shootTimer.reset();
 
-
-       lockedTagID = -1;
-       lastPipeline = -1;
-       tagLostTimer.reset();
-       tagLostTimer.start();
-
-       second = false;
-       waitingForPipeline = false;
-
-       alignTimer.stop();
+        alignTimer.stop();
         alignTimer.reset();
    }
 }

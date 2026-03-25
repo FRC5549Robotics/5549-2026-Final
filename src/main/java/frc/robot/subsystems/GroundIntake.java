@@ -39,7 +39,9 @@ public class GroundIntake extends SubsystemBase {
         );
 
         SparkMaxConfig pivotConfig = new SparkMaxConfig();
-        pivotConfig.idleMode(IdleMode.kBrake);
+
+        pivotConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(15);
+
         pivotMotor.configure(
             pivotConfig,
             com.revrobotics.ResetMode.kResetSafeParameters,

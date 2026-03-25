@@ -233,7 +233,7 @@ public final class Constants {
       )
     );
 
-    public static final Pose2d Red_HUB = layout.getTagPose(10).get().toPose2d().transformBy(
+    public static final Pose2d RED_HUB = layout.getTagPose(10).get().toPose2d().transformBy(
       new Transform2d(
           new Translation2d(-width / 2.0, 0.0),
           new Rotation2d()
