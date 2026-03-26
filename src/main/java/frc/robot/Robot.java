@@ -9,8 +9,8 @@ import com.ctre.phoenix6.HootAutoReplay;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.UsbCamera;
+//import edu.wpi.first.cameraserver.CameraServer;
+//import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -39,7 +39,7 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
 
-        CameraServer.startAutomaticCapture("camera", 0);
+       // CameraServer.startAutomaticCapture("camera", 0);
 
         for (int i = 1; i <= 6; i++) {
             // Use initDouble to set defaults only if they don't exist
@@ -48,7 +48,7 @@ public class Robot extends TimedRobot {
             Preferences.initDouble("Shooter_RPM_" + i, 0.0);
         }
 
-        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(100);
+        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(200);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(100);
+        NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(200);
     }
 
     @Override

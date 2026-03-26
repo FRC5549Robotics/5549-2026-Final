@@ -13,12 +13,6 @@
                 "data": {
                   "pathName": "testing path"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoShootCommand"
-                }
               }
             ]
           }

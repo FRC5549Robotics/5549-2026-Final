@@ -124,6 +124,7 @@ public class Shooter extends SubsystemBase {
     SmartDashboard.putNumber("Shooter Volts", shooterVolts);
     SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
     SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
+    SmartDashboard.putNumber("Shooter Left Motor Current", left.getSupplyCurrent().getValueAsDouble());
 
     // Command velocity with arbitrary feedforward voltage
 

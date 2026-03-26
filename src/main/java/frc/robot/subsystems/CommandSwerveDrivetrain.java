@@ -9,6 +9,7 @@ import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -18,6 +19,7 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -41,6 +43,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -340,19 +344,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
+        //SmartDashboard.putBoolean("LL_tv", LimelightHelpers.getTV("limelight"));
 
         double now = Timer.getFPGATimestamp();
 
-        LimelightHelpers.SetRobotOrientation("limelight", getPose().getRotation().getDegrees(), getChassisSpeeds().omegaRadiansPerSecond * 180 / Math.PI, 0, 0, 0, 0);
+        double yaw = getState().Pose.getRotation().getDegrees();
+        double omega = getChassisSpeeds().omegaRadiansPerSecond * 180.0 / Math.PI;
+
+        LimelightHelpers.SetRobotOrientation("limelight", yaw, omega, 0, 0, 0, 0);
 
         if (now - lastVisionTime > 0.1) {
             lastVisionTime = now;
-            LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
-            System.out.println(mt2.tagCount);
-            if (mt2 != null && mt2.tagCount > 0) {
-                System.out.println("checking vision");
 
-                Pose2d visionPose = mt2.pose;
+            LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+            //System.out.println(mt1.tagCount);
+            if (mt1 != null && mt1.tagCount > 0) {
+                //System.out.println("checking vision");
+
+                Pose2d visionPose = mt1.pose;
                 Pose2d currentPose = getPose();
 
                 double error = currentPose.getTranslation().getDistance(visionPose.getTranslation());
@@ -361,27 +370,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
                 // Reject bad vision
                 if (error > 1.0) {
-                    System.out.println("rejection 1");
                     reject = true;
                 }
 
-                if (mt2.tagCount == 1 && error > 0.5) {
-                    System.out.println("rejection 2");
+                if (mt1.tagCount == 1 && error > 0.5) {
                     reject = true;
                 }
 
-                double rotError = Math.abs(
-                    visionPose.getRotation().minus(currentPose.getRotation()).getRadians()
-                );
-
-                if (rotError > Units.degreesToRadians(45)) {
-                    System.out.println("rejection 3");
+                if (mt1.tagCount == 1 && mt1.avgTagDist > 3) {
                     reject = true;
                 }
 
                 if (!reject) {
                     System.out.println("tag good!");
-                    addVisionMeasurement(visionPose, mt2.timestampSeconds);
+                    addVisionMeasurement(visionPose, mt1.timestampSeconds, VecBuilder.fill(0.3, 0.3, 999999.0));
                 }
                 
             }

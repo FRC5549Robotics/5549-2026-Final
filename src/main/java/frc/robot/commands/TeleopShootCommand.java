@@ -18,6 +18,7 @@ import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
+import pabeles.concurrency.IntOperatorTask.Max;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.GroundIntake;
 import frc.robot.Constants;
@@ -87,7 +88,7 @@ public class TeleopShootCommand extends Command {
    @Override
    public void execute() {
 
-        System.out.println(state);
+        //System.out.println(state);
         if (state == State.ALIGNING) {
             Pose2d robotpose = drivetrain.getPose();
             Pose2d targetPose = getTargetPose();
@@ -96,19 +97,19 @@ public class TeleopShootCommand extends Command {
 
             double targetAngle = Math.atan2(delta.getY(), delta.getX());
 
+            targetAngle = targetAngle + Units.degreesToRadians(180);
+
             double currentAngle = robotpose.getRotation().getRadians();
 
             double omega = rotationPID.calculate(currentAngle, targetAngle);
-
-            omega = Math.max(Math.min(omega, MaxAngularRate), -MaxAngularRate);
 
             if (Math.abs(omega) > 0.01) {
                 omega += Math.copySign(0.35, omega);
             }
 
-            double angleError = Math.abs(targetAngle - currentAngle);
+            omega = MathUtil.clamp(omega, -MaxAngularRate, MaxAngularRate);
 
-            angleError = MathUtil.angleModulus(angleError);
+            double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
 
             if (Math.abs(angleError) < Units.degreesToRadians(1)) {
 
@@ -230,5 +231,7 @@ public class TeleopShootCommand extends Command {
 
         alignTimer.stop();
         alignTimer.reset();
+
+        rotationPID.reset();
    }
 }
