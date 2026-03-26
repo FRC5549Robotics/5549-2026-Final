@@ -343,6 +343,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         double now = Timer.getFPGATimestamp();
 
+        LimelightHelpers.SetRobotOrientation("limelight", getPose().getRotation().getDegrees(), getChassisSpeeds().omegaRadiansPerSecond * 180 / Math.PI, 0, 0, 0, 0);
+
         if (now - lastVisionTime > 0.1) {
             lastVisionTime = now;
             LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
@@ -360,7 +362,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 // Reject bad vision
                 if (error > 1.0) {
                     System.out.println("rejection 1");
-                reject = true;
+                    reject = true;
                 }
 
                 if (mt2.tagCount == 1 && error > 0.5) {
@@ -378,6 +380,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 }
 
                 if (!reject) {
+                    System.out.println("tag good!");
                     addVisionMeasurement(visionPose, mt2.timestampSeconds);
                 }
                 
