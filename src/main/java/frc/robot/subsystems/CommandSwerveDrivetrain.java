@@ -22,6 +22,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
@@ -346,6 +347,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void periodic() {
 
         m_field.setRobotPose(getPose());
+
+        Translation2d target = Constants.HUB.get();
+        m_field.getObject("HUB").setPose(new Pose2d(target, new Rotation2d()));
+
         Logger.recordOutput("RobotPose", getPose());
 
         /*

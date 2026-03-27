@@ -91,7 +91,7 @@ private final Timer alignTimer = new Timer();
             Translation2d robot = drivetrain.getState().Pose.getTranslation();
             Translation2d target = Constants.HUB.get();
 
-            Rotation2d direction = target.minus(robot).getAngle();
+            Rotation2d direction = target.minus(robot).getAngle().plus(Rotation2d.fromDegrees(180));
 
             turnCommand
                 .withDesaturateWheelSpeeds(true)
