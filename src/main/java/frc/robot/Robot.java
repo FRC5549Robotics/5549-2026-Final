@@ -56,8 +56,6 @@ public class Robot extends TimedRobot {
         m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run(); 
         m_robotContainer.getGameState().update();
-
-        ShooterLookup.updateTableFromPreferences();
     }
 
     @Override
@@ -82,6 +80,8 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+
+        ShooterLookup.updateTableFromPreferences();
     }
 
     @Override
@@ -99,6 +99,8 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
+
+        ShooterLookup.updateTableFromPreferences();
     }
 
     @Override

@@ -12,7 +12,6 @@ public class RobotStateEstimator extends SubsystemBase {
 
     public RobotStateEstimator(CommandSwerveDrivetrain swerve) {
         m_SwerveDrivetrain = swerve;
-        System.out.println("created");
     }
 
     @Override

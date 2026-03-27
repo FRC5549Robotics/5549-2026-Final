@@ -77,7 +77,7 @@ private final Timer alignTimer = new Timer();
        addRequirements(drivetrain, shooter, hood, belt);
    }
 
-   private SwerveRequest.FieldCentricFacingAngle turnCommand;
+   private SwerveRequest.FieldCentricFacingAngle turnCommand = new SwerveRequest.FieldCentricFacingAngle();
 
    private final double MaxSpeed = 4.5;
 

@@ -14,8 +14,12 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.AllianceFlipped;
+import frc.robot.util.AllianceFlippedUtil;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import frc.robot.util.AllianceFlipped;
+import frc.robot.util.AllianceFlippedUtil;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -216,27 +220,12 @@ public final class Constants {
     public static final int CANDLE_ID = 19;
 
     //Hub positions
+    public static final double distanceToFrontOfHub = Units.inchesToMeters(158.6);
+    public static final double widthOfHub = Units.inchesToMeters(47);
+    public static final double xCoordOfHub = distanceToFrontOfHub + widthOfHub / 2.0;
 
-    public static final AprilTagFieldLayout layout = AprilTagFields.k2026RebuiltAndymark.loadAprilTagLayoutField();
+    public static final double fieldWidth = Units.inchesToMeters(317.7);
+    public static final double yCoordOfHub = fieldWidth / 2.0;
 
-    public static final double width = Units.inchesToMeters(47.0);
-    public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
-    public static final double innerWidth = Units.inchesToMeters(41.7);
-    public static final double innerHeight = Units.inchesToMeters(56.5);
-
-    public static final double fieldWidth = layout.getFieldWidth();
-
-    public static final Pose2d BLUE_HUB = layout.getTagPose(26).get().toPose2d().transformBy(
-      new Transform2d(
-          new Translation2d(-width / 2.0, 0.0),
-          new Rotation2d()
-      )
-    );
-
-    public static final Pose2d RED_HUB = layout.getTagPose(10).get().toPose2d().transformBy(
-      new Transform2d(
-          new Translation2d(-width / 2.0, 0.0),
-          new Rotation2d()
-      )
-    );
+    public static final AllianceFlipped<Translation2d> HUB = AllianceFlippedUtil.fromBlue(new Translation2d(xCoordOfHub, yCoordOfHub));
 } 
