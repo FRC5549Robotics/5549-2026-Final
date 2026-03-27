@@ -1,21 +1,30 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.GroundIntake;
-
+import frc.robot.Constants;
 import frc.robot.Vision.LimelightHelpers;
 import frc.robot.shooter.ShooterLookup;
 import frc.robot.shooter.ShooterState;
 
 import static edu.wpi.first.units.Units.*;
+
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 
 
 public class AutoShootCommand extends Command {
@@ -62,155 +71,63 @@ public class AutoShootCommand extends Command {
         addRequirements(drivetrain, shooter, hood, belt, intake);
     }
 
-    public double getFilteredTX() {
-        //if (!LimelightHelpers.getTV("limelight")) {
-           //txFilter.reset();
-           //return Double.NaN;
-        //}
+    private final double MaxSpeed = 4.5;
 
-       double rawTx = LimelightHelpers.getTX("limelight");
+   private SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+        .withDeadband(MaxSpeed * 0.1)
+        .withRotationalDeadband(MaxAngularRate * 0.1)
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-       return txFilter.calculate(rawTx);
-    }
+   private XboxController joystick = new XboxController(0);
 
+    private final PIDController rotationPID = new PIDController(5, 0.0, 0);
 
     @Override
     public void execute() {
 
-        if (waitingForPipeline) {
-            if (LimelightHelpers.getCurrentPipelineIndex("limelight") == lastPipeline) {
-                waitingForPipeline = false; // The switch is confirmed
-                txFilter.reset();
-            } else {
-                System.out.println("still waiting");
-                return; // Still waiting
-            }
-        }   
-
-        System.out.println(state);
         if (state == State.ALIGNING) {
-            double rotationOutput = 0;
+            Translation2d robot = drivetrain.getState().Pose.getTranslation();
+            Translation2d target = Constants.HUB.get();
 
-            boolean hasTarget = LimelightHelpers.getTV("limelight");
-            int seenTag = (int) LimelightHelpers.getFiducialID("limelight");
+            Rotation2d direction = target.minus(robot).getAngle();
 
-            shooter.shoot(1000);
+            double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
+            double targetAngle = direction.getRadians();
 
-            if (hasTarget) {
+            double omega = rotationPID.calculate(currentAngle + Math.PI, targetAngle);
 
-                if (lockedTagID == -1) {
-                   lockedTagID = seenTag;
-               }
-          
-               if (seenTag == lockedTagID) {
-                   tagLostTimer.restart();
-               }
-          
-               else if (tagLostTimer.hasElapsed(1)) {
-                   lockedTagID = seenTag;
-                   tagLostTimer.restart();
-               }
+            double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
 
-                int tagID = (int) LimelightHelpers.getFiducialID("limelight");
+            angleError = angleError + Math.PI;
 
-                int desiredPipeline = 0;
+            double kS = 0.36;
 
-                switch (lockedTagID) {
-                // middle
-                case 5:
-                case 10:
-                case 2:
-                case 18:
-                case 26:
-                case 21:
-                    desiredPipeline = 0;
-                    break;
-                // right
-                case 8:
-                case 24:
-                    desiredPipeline = 1;
-                    break;
-                //left
-                case 9:
-                case 11:
-                case 25:
-                case 27:
-                    desiredPipeline = 2;
-                    break;
-                case 1:
-                case 12:
-                case 6:
-                case 7:
-                case 17:
-                case 28:
-                case 22:
-                case 23:
-                    desiredPipeline = 3;
-                    break;
-                };
-
-               if (desiredPipeline != lastPipeline) {
-                   LimelightHelpers.setPipelineIndex("limelight", desiredPipeline);
-
-                    waitingForPipeline = true;
-
-                   lastPipeline = desiredPipeline;
-
-                   drivetrain.aimDrive(0, 0, 0);
-                   return;
-               }
-
-                double tx = getFilteredTX();
-                double kP = 0.01;
-                double kS = 0.35;
-                double tolerance = 0.75;
-                double omega = tx * -kP * MaxAngularRate;
-
-                System.out.println(tx);
-
-                if (hasTarget && !Double.isNaN(tx)) {
-                    if (Math.abs(tx) > tolerance) {
-
-                    omega += Math.copySign(kS, omega);
-                    rotationOutput = omega;
-
-                    alignTimer.stop();
-                    alignTimer.reset();
-
-                    } else {
-                    omega = 0.0;
-
-                if (!alignTimer.isRunning()) {
-                    alignTimer.restart();
-                }
-
-                if (alignTimer.hasElapsed(0.15)) { // time inside tolerance
-                    if (desiredPipeline != 3) {
-                        state = State.SPINNING_UP;
-                    }
-                }
+            if (Math.abs(angleError) < Units.degreesToRadians(10) || Math.abs(angleError) > Units.degreesToRadians(350)) {
+                omega += Math.copySign(kS, omega);
             }
-               }
-            } else {
-               // If we see nothing, allow switching soon
-               if (tagLostTimer.hasElapsed(1)) {
-                   lockedTagID = -1;
-               }
-            }
-            
 
-            drivetrain.aimDrive(0.0, 0.0, rotationOutput);
-            return;
+            omega = MathUtil.clamp(omega, -MaxAngularRate, MaxAngularRate);
+
+            drivetrain.setControl(
+                drive
+                    .withVelocityX(MaxSpeed * -joystick.getLeftY())
+                    .withVelocityY(MaxSpeed * -joystick.getLeftX())
+                    .withRotationalRate(omega)
+            );
+
+            SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
+            SmartDashboard.putNumber("OmegaCmd", omega);
+
+            if (Math.abs(angleError) < Units.degreesToRadians(1) || Math.abs(angleError) > Units.degreesToRadians(359)) {
+                state = State.SPINNING_UP;
+            }
         }
 
        if (state == State.SPINNING_UP) {
-           second = true;
            drivetrain.stopDriving();
-
 
            double distance = limelight.getDistanceToTagMeters();
            SmartDashboard.putNumber("Distance", distance);
-
 
            if (distance <= 0) {
                return;
@@ -293,5 +210,7 @@ public class AutoShootCommand extends Command {
 
        alignTimer.stop();
         alignTimer.reset();
+
+        rotationPID.reset();
    }
 }

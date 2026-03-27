@@ -87,6 +87,8 @@ public class RobotContainer {
     JoystickButton AutoAlign = new JoystickButton(m_driver.getHID(), 3);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    
+    private final RobotStateEstimator stateEstimator = new RobotStateEstimator(drivetrain);
 
     JoystickButton resetOdometry = new JoystickButton(m_driver.getHID(), 8);
     JoystickButton groundIntakeShakeButton = new JoystickButton(m_operator.getHID(), 6);

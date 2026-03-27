@@ -32,6 +32,7 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.BooleanSupplier;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class TeleopShootCommand extends Command {
@@ -54,14 +55,14 @@ public class TeleopShootCommand extends Command {
        SHOOTING
     }
 
-   private State state = State.ALIGNING;
+    private State state = State.ALIGNING;
 
-   private final Timer shootTimer = new Timer();
-private final Timer alignTimer = new Timer();
+    private final Timer shootTimer = new Timer();
+    private final Timer alignTimer = new Timer();
 
-   private final PIDController rotationPID = new PIDController(4.0, 0.0, 0.3);
+    private final PIDController rotationPID = new PIDController(5, 0.0, 0);
 
-   public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
+    public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
        this.drivetrain = drivetrain;
        this.limelight = limelight;
        this.shooter = shooter;
@@ -76,10 +77,13 @@ private final Timer alignTimer = new Timer();
 
        addRequirements(drivetrain, shooter, hood, belt);
    }
-
-   private SwerveRequest.FieldCentricFacingAngle turnCommand = new SwerveRequest.FieldCentricFacingAngle();
-
+    
    private final double MaxSpeed = 4.5;
+
+   private SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+        .withDeadband(MaxSpeed * 0.1)
+        .withRotationalDeadband(MaxAngularRate * 0.1)
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
    private XboxController joystick = new XboxController(0);
 
@@ -91,15 +95,38 @@ private final Timer alignTimer = new Timer();
             Translation2d robot = drivetrain.getState().Pose.getTranslation();
             Translation2d target = Constants.HUB.get();
 
-            Rotation2d direction = target.minus(robot).getAngle().plus(Rotation2d.fromDegrees(180));
+            Rotation2d direction = target.minus(robot).getAngle();
 
-            turnCommand
-                .withDesaturateWheelSpeeds(true)
-                .withHeadingPID(4.5, 0.0, 0.0)
-                .withTargetDirection(direction)
-                .withVelocityX(MaxSpeed * -joystick.getLeftY())
-                .withVelocityY(MaxSpeed * -joystick.getLeftX());
-            drivetrain.setControl(turnCommand);
+            double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
+            double targetAngle = direction.getRadians();
+
+            double omega = rotationPID.calculate(currentAngle + Math.PI, targetAngle);
+
+            double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
+
+            angleError = angleError + Math.PI;
+
+            double kS = 0.36;
+
+            if (Math.abs(angleError) < Units.degreesToRadians(10) || Math.abs(angleError) > Units.degreesToRadians(350)) {
+                omega += Math.copySign(kS, omega);
+            }
+
+            omega = MathUtil.clamp(omega, -MaxAngularRate, MaxAngularRate);
+
+            drivetrain.setControl(
+                drive
+                    .withVelocityX(MaxSpeed * -joystick.getLeftY())
+                    .withVelocityY(MaxSpeed * -joystick.getLeftX())
+                    .withRotationalRate(omega)
+            );
+
+            SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
+            SmartDashboard.putNumber("OmegaCmd", omega);
+
+            if (Math.abs(angleError) < Units.degreesToRadians(1) || Math.abs(angleError) > Units.degreesToRadians(359)) {
+                state = State.SPINNING_UP;
+            }
         }
 
 
