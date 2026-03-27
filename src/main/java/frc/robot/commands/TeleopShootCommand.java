@@ -10,9 +10,11 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.XboxController;
 
 import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -55,7 +57,7 @@ public class TeleopShootCommand extends Command {
    private State state = State.ALIGNING;
 
    private final Timer shootTimer = new Timer();
-    private final Timer alignTimer = new Timer();
+private final Timer alignTimer = new Timer();
 
    private final PIDController rotationPID = new PIDController(4.0, 0.0, 0.3);
 
@@ -75,76 +77,43 @@ public class TeleopShootCommand extends Command {
        addRequirements(drivetrain, shooter, hood, belt);
    }
 
-    private Pose2d getTargetPose() {
-        var alliance = DriverStation.getAlliance();
+   private SwerveRequest.FieldCentricFacingAngle turnCommand;
 
-        if (alliance.isPresent() && alliance.get() == Alliance.Red) {
-            return Constants.RED_HUB;
-        } else {
-            return Constants.BLUE_HUB;
-        }
-    }
+   private final double MaxSpeed = 4.5;
+
+   private XboxController joystick = new XboxController(0);
 
    @Override
    public void execute() {
 
         //System.out.println(state);
         if (state == State.ALIGNING) {
-            Pose2d robotpose = drivetrain.getPose();
-            Pose2d targetPose = getTargetPose();
+            Translation2d robot = drivetrain.getState().Pose.getTranslation();
+            Translation2d target = Constants.HUB.get();
 
-            Translation2d delta = targetPose.getTranslation().minus(robotpose.getTranslation());
+            Rotation2d direction = target.minus(robot).getAngle();
 
-            double targetAngle = Math.atan2(delta.getY(), delta.getX());
-
-            targetAngle = targetAngle + Units.degreesToRadians(180);
-
-            double currentAngle = robotpose.getRotation().getRadians();
-
-            double omega = rotationPID.calculate(currentAngle, targetAngle);
-
-            if (Math.abs(omega) > 0.01) {
-                omega += Math.copySign(0.35, omega);
-            }
-
-            omega = MathUtil.clamp(omega, -MaxAngularRate, MaxAngularRate);
-
-            double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
-
-            if (Math.abs(angleError) < Units.degreesToRadians(1)) {
-
-                if (!alignTimer.isRunning()) {
-                    alignTimer.restart();
-                }
-
-                if (alignTimer.hasElapsed(0.15)) {
-                    state = State.SPINNING_UP;
-                }
-
-                omega = 0;
-
-            } else {
-                alignTimer.stop();
-                alignTimer.reset();
-            }
-
-            drivetrain.aimDrive(0.0, 0.0, omega);
-
-            return;
+            turnCommand
+                .withDesaturateWheelSpeeds(true)
+                .withHeadingPID(4.5, 0.0, 0.0)
+                .withTargetDirection(direction)
+                .withVelocityX(MaxSpeed * -joystick.getLeftY())
+                .withVelocityY(MaxSpeed * -joystick.getLeftX());
+            drivetrain.setControl(turnCommand);
         }
 
 
-       if (state == State.SPINNING_UP || state == State.SHOOTING) {
-           drivetrain.setControl(brake);
-       }
+        if (state == State.SPINNING_UP || state == State.SHOOTING) {
+            drivetrain.setControl(brake);
+        }
 
-       if (state == State.SPINNING_UP) {
-           drivetrain.stopDriving();
+        if (state == State.SPINNING_UP) {
+            drivetrain.stopDriving();
 
-            Pose2d robotPose = drivetrain.getPose();
-            Pose2d targetPose = getTargetPose();
+            Translation2d robot = drivetrain.getState().Pose.getTranslation();
+            Translation2d target = Constants.HUB.get();
 
-            double distance = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+            double distance = robot.getDistance(target);
 
            SmartDashboard.putNumber("Distance", distance);
 

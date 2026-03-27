@@ -344,53 +344,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
-        //SmartDashboard.putBoolean("LL_tv", LimelightHelpers.getTV("limelight"));
-
-        double now = Timer.getFPGATimestamp();
-
-        double yaw = getState().Pose.getRotation().getDegrees();
-        double omega = getChassisSpeeds().omegaRadiansPerSecond * 180.0 / Math.PI;
-
-        LimelightHelpers.SetRobotOrientation("limelight", yaw, omega, 0, 0, 0, 0);
-
-        if (now - lastVisionTime > 0.1) {
-            lastVisionTime = now;
-
-            LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
-            //System.out.println(mt1.tagCount);
-            if (mt1 != null && mt1.tagCount > 0) {
-                //System.out.println("checking vision");
-
-                Pose2d visionPose = mt1.pose;
-                Pose2d currentPose = getPose();
-
-                double error = currentPose.getTranslation().getDistance(visionPose.getTranslation());
-
-                boolean reject = false;
-
-                // Reject bad vision
-                if (error > 1.0) {
-                    reject = true;
-                }
-
-                if (mt1.tagCount == 1 && error > 0.5) {
-                    reject = true;
-                }
-
-                if (mt1.tagCount == 1 && mt1.avgTagDist > 3) {
-                    reject = true;
-                }
-
-                if (!reject) {
-                    System.out.println("tag good!");
-                    addVisionMeasurement(visionPose, mt1.timestampSeconds, VecBuilder.fill(0.3, 0.3, 999999.0));
-                }
-                
-            }
-        }
 
         m_field.setRobotPose(getPose());
-
         Logger.recordOutput("RobotPose", getPose());
 
         /*

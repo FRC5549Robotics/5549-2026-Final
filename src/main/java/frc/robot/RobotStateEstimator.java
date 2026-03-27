@@ -1,0 +1,37 @@
+package frc.robot;
+
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Vision.LimelightHelpers;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
+
+public class RobotStateEstimator extends SubsystemBase {
+    private CommandSwerveDrivetrain m_SwerveDrivetrain;
+    private boolean doRejectUpdate = false;
+
+    public RobotStateEstimator(CommandSwerveDrivetrain swerve) {
+        m_SwerveDrivetrain = swerve;
+        System.out.println("created");
+    }
+
+    @Override
+    public void periodic() {
+        doRejectUpdate = false;
+        LimelightHelpers.SetRobotOrientation("limelight", m_SwerveDrivetrain.getPigeon2().getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
+        LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+        if (mt1 == null) {
+            return;
+        }
+        if (Math.abs(m_SwerveDrivetrain.getPigeon2().getAngularVelocityZWorld().getValueAsDouble()) > 720) {  //if angular velocity > 720 deg/s, ignore vision
+            doRejectUpdate = true;
+        } 
+        if (mt1.tagCount == 0) {
+            doRejectUpdate = true;
+        }
+        if (!doRejectUpdate) {
+            m_SwerveDrivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(0.7,0.7,9999999));
+            m_SwerveDrivetrain.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);
+        }
+    }
+}
