@@ -1,39 +1,39 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Hood;
+import frc.robot.subsystems.Extension;
 import edu.wpi.first.wpilibj.Timer;
 
-public class ZeroHood extends Command {
+public class ZeroExtension extends Command {
     private final Timer timer = new Timer();
 
-    private final Hood hood;
+    private final Extension extension;
 
-    public ZeroHood(Hood hood) {
-        this.hood = hood;
-        addRequirements(hood);
+    public ZeroExtension(Extension extension) {
+        this.extension = extension;
+        addRequirements(extension);
     }
 
     @Override
     public void initialize() {
-        System.out.println("Zeroing Hood...");
+        System.out.println("Zeroing extension...");
         timer.reset();
         timer.start();
     }
 
     @Override
     public void execute() {
-        hood.hoodDownSlow();
+        extension.extensionDownSlow();
     }
 
     @Override
     public boolean isFinished() {
-        return hood.atBottom();
+        return extension.atBottom();
     }
 
     @Override
     public void end(boolean interrupted) {
-        hood.stop();
-        hood.zeroEncoder();
+        extension.stop();
+        extension.zeroEncoder();
     }
 }

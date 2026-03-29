@@ -58,9 +58,11 @@ import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.Shooter;
 import frc.robot.util.GameState;
 import frc.robot.subsystems.LED;
+import frc.robot.subsystems.Extension;
 import frc.robot.subsystems.Limelight;
 import frc.robot.Vision.LimelightHelpers;
 import frc.robot.subsystems.LEDState;
+
 
 
 
@@ -108,6 +110,7 @@ public class RobotContainer {
     private final Shooter m_shooter = new Shooter();
     private final Hood m_hood = new Hood();
     private final LED m_LED = new LED();
+    private final Extension m_extension = new Extension();
     // private final Candle m_leds = new Candle();
     private final GameState gameState = new GameState();
 
@@ -126,6 +129,10 @@ public class RobotContainer {
 
     public Hood getHood() {
         return m_hood;
+    }
+
+    public Extension getExtension() {
+        return m_extension;
     }
 
     // AUTOCHOOSER SET UP

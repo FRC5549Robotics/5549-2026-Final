@@ -228,4 +228,7 @@ public final class Constants {
     public static final double yCoordOfHub = fieldWidth / 2.0;
 
     public static final AllianceFlipped<Translation2d> HUB = AllianceFlippedUtil.fromBlue(new Translation2d(xCoordOfHub, yCoordOfHub));
+
+    //Expanding hopper
+    public static final int EXTENSION_MOTOR_ID = 21;
 } 

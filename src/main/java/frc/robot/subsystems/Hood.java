@@ -23,16 +23,16 @@ public class Hood extends SubsystemBase{
 
     private boolean PIDEnabled = false; //default to PID being off
 
-    private final PIDController hoodPID = new PIDController(0.01, 0.0, 0.01); // kP, kI, kD
+    private final PIDController hoodPID = new PIDController(0.08, 0.0, 0.004); // kP, kI, kD
     private static final double kS = 0.05;
 
     private double hoodSetpoint = 72.0;
     {
-        hoodPID.setTolerance(1);
+        hoodPID.setTolerance(0.5);
     }
 
     //private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
-    private final TorqueCurrentFOC homingRequest = new TorqueCurrentFOC(-25);
+    private final DutyCycleOut homingRequest = new DutyCycleOut(-0.1);
 
     TalonFX HoodMotor;
     TalonFXConfiguration HoodMotorConfig;
@@ -75,6 +75,7 @@ public class Hood extends SubsystemBase{
     }
 
     public boolean atTarget() {
+        //SmartDashboard.putBoolean("Hood at target", hoodPID.atSetpoint());
         return hoodPID.atSetpoint();
     }
 
@@ -84,24 +85,38 @@ public class Hood extends SubsystemBase{
 
     public void stop() {
         HoodMotor.setControl(new NeutralOut());
-        System.out.println("hood motor stop() ran");
+        //System.out.println("hood motor stop() ran");
+        PIDEnabled = true;
     }
 
     public void zeroEncoder() {
         HoodMotor.setPosition(0);
-        PIDEnabled = true;
+        System.out.println("hood zeroed");
     }
 
     public boolean atBottom() {
-        System.out.println("Checking if at bottom");
-        return Math.abs(HoodMotor.getVelocity().getValueAsDouble()) < 0.05; //if the motor slows down enough, return that it's hit the hard stop
+        boolean velocitySlow = Math.abs(HoodMotor.getVelocity().getValueAsDouble()) < 0.05;
+        //SmartDashboard.putBoolean("velocitySlow", velocitySlow);
+
+        boolean currentSpiked = HoodMotor.getStatorCurrent().getValueAsDouble() > 10.0;
+        //SmartDashboard.putBoolean("currentSpiked", currentSpiked);
+
+        return velocitySlow && currentSpiked;
     }
 
     @Override
     public void periodic() {
         double currentPos = getHoodPosition();
 
+        SmartDashboard.putNumber("Hood Target", hoodSetpoint);
+        SmartDashboard.putNumber("Hood Position", currentPos);
+        //SmartDashboard.putBoolean("Hood PID enabled", PIDEnabled);
+
+        if (!PIDEnabled || !PIDEnabled) return;
+
         double output = hoodPID.calculate(currentPos, hoodSetpoint);
+
+        //SmartDashboard.putNumber("Hood Output", output);
 
         if (Math.abs(output) > 0.001) {
             output += Math.signum(output) * kS;
@@ -109,12 +124,10 @@ public class Hood extends SubsystemBase{
         
         output = MathUtil.clamp(output, -0.25, 0.25);
 
-        if (PIDEnabled == true && atTarget() == false) { //if the hood has been zeroed and isn't within tolerance
+        if (atTarget()) {
+            HoodMotor.setControl(new NeutralOut());
+        } else {
             HoodMotor.setControl(new DutyCycleOut(output).withEnableFOC(true)); //move the hood
         }
-
-        SmartDashboard.putNumber("Hood Target", hoodSetpoint);
-        SmartDashboard.putNumber("Hood Position", currentPos);
-        SmartDashboard.putNumber("Hood Output", output);
     }
 }

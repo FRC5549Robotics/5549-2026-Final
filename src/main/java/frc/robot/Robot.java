@@ -15,7 +15,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
-
+import frc.robot.commands.ZeroExtension;
 import frc.robot.commands.ZeroHood;
 import frc.robot.shooter.ShooterLookup;
 import frc.robot.util.GameState;
@@ -73,6 +73,8 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         new ZeroHood(m_robotContainer.getHood()).schedule();
 
+        new ZeroExtension(m_robotContainer.getExtension()).schedule();
+
         NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(0);
 
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
@@ -93,6 +95,8 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         new ZeroHood(m_robotContainer.getHood()).schedule();
+        
+        new ZeroExtension(m_robotContainer.getExtension()).schedule();
 
         NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(0);
 

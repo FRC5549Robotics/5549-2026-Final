@@ -1,0 +1,121 @@
+package frc.robot.subsystems;
+
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.spark.SparkMax;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+
+public class Extension extends SubsystemBase{
+
+    private boolean PIDEnabled = false; //default to PID being off
+
+    private final PIDController extensionPID = new PIDController(0.08, 0.0, 0.004); // kP, kI, kD
+    private static final double kS = 0.05;
+
+    private double extensionSetpoint = 0;
+    {
+        extensionPID.setTolerance(0.5);
+    }
+
+    //private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
+    private final DutyCycleOut homingRequest = new DutyCycleOut(0.13);
+
+    TalonFX ExtensionMotor;
+    TalonFXConfiguration ExtensionMotorConfig;
+
+    public Extension(){
+        ExtensionMotor = new TalonFX(Constants.EXTENSION_MOTOR_ID, "lil clanker");
+        ExtensionMotorConfig = new TalonFXConfiguration();
+
+        ExtensionMotorConfig.CurrentLimits.StatorCurrentLimit = 50;
+        ExtensionMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        ExtensionMotorConfig.CurrentLimits.SupplyCurrentLimit = 35; 
+        ExtensionMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+        ExtensionMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+        ExtensionMotorConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
+        ExtensionMotorConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.05;
+
+        ExtensionMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 4; // cap on velocity
+        ExtensionMotorConfig.MotionMagic.MotionMagicAcceleration = 8; // cap on acceleration
+
+        ExtensionMotor.getConfigurator().apply(ExtensionMotorConfig);
+
+    }
+
+    public void setAngle(double target) {
+        extensionSetpoint = target;
+    }
+
+    public boolean atTarget() {
+        return extensionPID.atSetpoint();
+    }
+
+    public void extensionDownSlow() {
+        ExtensionMotor.setControl(homingRequest);
+    }
+
+    public void stop() {
+        ExtensionMotor.setControl(new NeutralOut());
+        System.out.println("extension motor stop() ran");
+        PIDEnabled = true;
+    }
+
+    public void zeroEncoder() {
+        ExtensionMotor.setPosition(0);
+        System.out.println("extension zeroed");
+    }
+
+    public boolean atBottom() {
+        boolean velocitySlow = Math.abs(ExtensionMotor.getVelocity().getValueAsDouble()) < 0.05;
+        SmartDashboard.putBoolean("velocitySlow", velocitySlow);
+
+        boolean currentSpiked = ExtensionMotor.getStatorCurrent().getValueAsDouble() > 25.0;
+        SmartDashboard.putNumber("current", ExtensionMotor.getStatorCurrent().getValueAsDouble());
+
+        return velocitySlow && currentSpiked;
+    }
+
+    @Override
+    public void periodic() {
+        double currentPos = ExtensionMotor.getPosition().getValueAsDouble();
+
+        SmartDashboard.putNumber("extension Target", extensionSetpoint);
+        SmartDashboard.putNumber("extension Position", currentPos);
+        SmartDashboard.putBoolean("extension PID enabled", PIDEnabled);
+
+        if (!PIDEnabled || !PIDEnabled) return;
+
+        double output = extensionPID.calculate(currentPos, extensionSetpoint);
+
+        //SmartDashboard.putNumber("Hood Output", output);
+
+        if (Math.abs(output) > 0.001) {
+            output += Math.signum(output) * kS;
+        }
+        
+        output = MathUtil.clamp(output, -0.25, 0.25);
+
+        if (atTarget()) {
+            ExtensionMotor.setControl(new NeutralOut());
+        } else {
+            ExtensionMotor.setControl(new DutyCycleOut(output).withEnableFOC(true)); //move the hood
+        }
+    }
+}
