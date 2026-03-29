@@ -177,6 +177,15 @@ public class RobotContainer {
                 
             )
         );
+        NamedCommands.registerCommand(
+            "QuickAutoShootCommand",
+            new SequentialCommandGroup(
+                new ZeroHood(m_hood),
+                new ParallelCommandGroup(new InstantCommand(m_pivot:: IntakeOn), new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
+                .withTimeout(4))
+                
+            )
+        );
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -190,10 +199,10 @@ public class RobotContainer {
 
             m_LED.setCountdown(seconds);
 
-            SmartDashboard.putBoolean("Hub Inactive", hubInactive);
-            SmartDashboard.putBoolean("LB Held", rbHeld);
-            SmartDashboard.putNumber("Limelight TX", tx);
-            SmartDashboard.putBoolean("Shooter At Speed", atSpeed);
+            //SmartDashboard.putBoolean("Hub Inactive", hubInactive);
+            //SmartDashboard.putBoolean("LB Held", rbHeld);
+            //SmartDashboard.putNumber("Limelight TX", tx);
+            //SmartDashboard.putBoolean("Shooter At Speed", atSpeed);
 
             return computeLEDState(hubInactive, rbHeld, tx, atSpeed);
         
@@ -250,6 +259,7 @@ public class RobotContainer {
         m_driver.start().and(m_driver.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         m_driver.start().and(m_driver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
         m_driver.axisGreaterThan(3, .7).whileTrue(new RunCommand(m_pivot:: setPivotUp )).onFalse(new InstantCommand(m_pivot:: off));
+         m_driver.axisGreaterThan(2, .7).whileTrue(new RunCommand(m_pivot:: setPivotUpFully )).onFalse(new InstantCommand(m_pivot:: off));
 
         //m_driver.pov(0).whileTrue(Commands.run(() -> m_shooter.runCharacterization(2.0), m_shooter));
         //m_driver.pov(180).whileTrue(Commands.run(() -> m_shooter.runCharacterization(8.0), m_shooter));
@@ -271,15 +281,6 @@ public class RobotContainer {
         //groundIntakeShakeButton.whileTrue(new RunCommand(m_pivot::shooting, m_pivot)); //RB to shake
         //Belt unjam
         m_operator.leftBumper().onTrue(new InstantCommand(m_belt:: jammed)).onFalse(new InstantCommand(m_belt:: off));
-        //driver intake controls
-        m_pivot.setDefaultCommand(new RunCommand(() -> {
-            if (m_driver.getRightTriggerAxis() > Constants.TRIGGER_DEADBAND) {
-                //m_pivot.setPivotUp();
-            } //else {
-                //m_pivot.setPivotDown();
-            //}
-            }, m_pivot)
-        );
         //Operator shoots balls
         m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
             .whileTrue(
@@ -289,10 +290,11 @@ public class RobotContainer {
                     new RunCommand(() -> {
                         if (m_shooter.atSpeed()) {
                             m_belt.intake();
-                            System.out.println("belts run!");
+                            //System.out.println("belts run!");
                         } else {
-                            m_belt.off();
-                            System.out.println("belt not run");
+                            m_belt.intake();
+                            //m_belt.off();
+                            //System.out.println("belt not run");
                         }
                     }, m_belt),
 

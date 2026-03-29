@@ -23,9 +23,7 @@ public class Belt extends SubsystemBase{
     TalonFXConfiguration beltConfigs;
     TalonFXConfigurator beltConfigurator;
 
-    private final DutyCycleOut dutyCycleOut = new DutyCycleOut(0.0).withEnableFOC(true);
-    
-    //private final VoltageOut voltageRequest = new VoltageOut(0);
+    private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0).withEnableFOC(true);
 
     //left follows right
     private final Follower belt_left_Follower = new Follower(Constants.BELT_RIGHT_MOTOR_ID, MotorAlignmentValue.Opposed);
@@ -47,28 +45,34 @@ public class Belt extends SubsystemBase{
         beltConfigs.Voltage.PeakForwardVoltage = 12.0;
         beltConfigs.Voltage.PeakReverseVoltage = -12.0;
 
-        beltConfigs.Slot0.kP = 0.12;
+        beltConfigs.Slot0.kP = 0.5;
         beltConfigs.Slot0.kI = 0.0;
         beltConfigs.Slot0.kD = 0.0;
-        beltConfigs.Slot0.kV = 0.0;
+        beltConfigs.Slot0.kV = 0.121;
+        beltConfigs.Slot0.kS = 0.4;
 
-        beltConfigs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.08; //take 0.08 seconds to reach demanded output
+        beltConfigs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.00; //take 0.08 seconds to reach demanded output
 
         belt_right.getConfigurator().apply(beltConfigs);
         belt_left.getConfigurator().apply(beltConfigs);
+
         belt_left.setControl(belt_left_Follower);
     }
 
     
     public void intake(){
-        belt_right.setControl(dutyCycleOut.withOutput(0.83)); 
+        belt_right.setControl(velocityRequest.withVelocity(75)); 
     }
     public void jammed(){
-        belt_right.setControl(dutyCycleOut.withOutput(-0.3)); //run belts backwards
+        belt_right.setControl(velocityRequest.withVelocity(-50)); //run belts backwards
     }
     
     public void off(){
-        belt_right.setControl(dutyCycleOut.withOutput(0)); //turn off belts
+        belt_right.setControl(velocityRequest.withVelocity(0)); //turn off belts
     }
-    
+
+    @Override
+    public void periodic() {
+        SmartDashboard.putNumber("Belt RPM", belt_left.getVelocity().getValueAsDouble());
+    }    
 }

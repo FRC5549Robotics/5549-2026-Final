@@ -152,7 +152,6 @@ public class TeleopShootCommand extends Command {
            hood.setAngle(shot.hoodAngleDeg);
            shooter.shoot(shot.flywheelRPM);
 
-
            if (shooter.atSpeed()) {
 
 

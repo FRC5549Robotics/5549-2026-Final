@@ -23,10 +23,12 @@ public class Hood extends SubsystemBase{
 
     private boolean PIDEnabled = false; //default to PID being off
 
-    private final PIDController hoodPID = new PIDController(0.15, 0.0, 0.001); // kP, kI, kD
+    private final PIDController hoodPID = new PIDController(0.01, 0.0, 0.01); // kP, kI, kD
+    private static final double kS = 0.05;
+
     private double hoodSetpoint = 72.0;
     {
-        hoodPID.setTolerance(0.5);
+        hoodPID.setTolerance(1);
     }
 
     //private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
@@ -73,9 +75,7 @@ public class Hood extends SubsystemBase{
     }
 
     public boolean atTarget() {
-        double error = hoodSetpoint - getHoodPosition();
-        System.out.println(error);
-        return Math.abs(error) < 0.4;
+        return hoodPID.atSetpoint();
     }
 
     public void hoodDownSlow() {
@@ -93,6 +93,7 @@ public class Hood extends SubsystemBase{
     }
 
     public boolean atBottom() {
+        System.out.println("Checking if at bottom");
         return Math.abs(HoodMotor.getVelocity().getValueAsDouble()) < 0.05; //if the motor slows down enough, return that it's hit the hard stop
     }
 
@@ -101,10 +102,14 @@ public class Hood extends SubsystemBase{
         double currentPos = getHoodPosition();
 
         double output = hoodPID.calculate(currentPos, hoodSetpoint);
+
+        if (Math.abs(output) > 0.001) {
+            output += Math.signum(output) * kS;
+        }
         
         output = MathUtil.clamp(output, -0.25, 0.25);
 
-        if (PIDEnabled == true) { //if the hood has been zeroed...
+        if (PIDEnabled == true && atTarget() == false) { //if the hood has been zeroed and isn't within tolerance
             HoodMotor.setControl(new DutyCycleOut(output).withEnableFOC(true)); //move the hood
         }
 

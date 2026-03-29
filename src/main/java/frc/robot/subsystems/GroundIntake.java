@@ -94,6 +94,17 @@ public class GroundIntake extends SubsystemBase {
         }
     }
 
+    public void setPivotUpFully() {
+        if (getPivotPosition() > 190) {
+            pivotMotor.set(0.4);
+            //System.out.println("Going Up");
+        } else {
+            pivotMotor.set(0.0);
+            intakeMotor.set(0.0);
+            holdingAtTop = true;
+            System.out.println("All the way up");
+        }
+    }
     
     public void setPivotDownFast() {
         holdingAtTop = false;

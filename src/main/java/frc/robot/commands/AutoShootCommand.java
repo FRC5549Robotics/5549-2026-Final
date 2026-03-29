@@ -89,16 +89,14 @@ public class AutoShootCommand extends Command {
             Translation2d robot = drivetrain.getState().Pose.getTranslation();
             Translation2d target = Constants.HUB.get();
 
-            Rotation2d direction = target.minus(robot).getAngle();
+            Rotation2d direction = target.minus(robot).getAngle().plus(Rotation2d.fromRadians(Math.PI));
 
             double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
             double targetAngle = direction.getRadians();
 
-            double omega = rotationPID.calculate(currentAngle + Math.PI, targetAngle);
+            double omega = rotationPID.calculate(currentAngle, targetAngle);
 
             double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
-
-            angleError = angleError + Math.PI;
 
             double kS = 0.36;
 
@@ -110,8 +108,8 @@ public class AutoShootCommand extends Command {
 
             drivetrain.setControl(
                 drive
-                    .withVelocityX(MaxSpeed * -joystick.getLeftY())
-                    .withVelocityY(MaxSpeed * -joystick.getLeftX())
+                    .withVelocityX(0)
+                    .withVelocityY(0)
                     .withRotationalRate(omega)
             );
 
@@ -165,7 +163,7 @@ public class AutoShootCommand extends Command {
 
            belt.intake();
 
-            if (shootTimer.hasElapsed(4)) {
+            if (shootTimer.hasElapsed(2)) {
                 intake.shooting();
             }
 

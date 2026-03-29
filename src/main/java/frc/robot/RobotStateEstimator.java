@@ -28,6 +28,9 @@ public class RobotStateEstimator extends SubsystemBase {
         if (mt1.tagCount == 0) {
             doRejectUpdate = true;
         }
+        if (mt1.avgTagDist > 3.0) {
+            doRejectUpdate = true;
+        }
         if (!doRejectUpdate) {
             m_SwerveDrivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(0.7,0.7,9999999));
             m_SwerveDrivetrain.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);

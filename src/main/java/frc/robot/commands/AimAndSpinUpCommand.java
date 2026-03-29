@@ -33,7 +33,7 @@ public class AimAndSpinUpCommand extends Command {
         //SmartDashboard.putNumber("Target Pos", shot.hoodAngleDeg);
         hood.setAngle(shot.hoodAngleDeg);
         shooter.shoot(shot.flywheelRPM);
-        SmartDashboard.putNumber("flywheelRPM", shot.flywheelRPM);
+        SmartDashboard.putNumber("requested flywheel RPM", shot.flywheelRPM);
     }
 }
 

@@ -39,6 +39,5 @@ public class ZeroHood extends Command {
     public void end(boolean interrupted) {
         hood.stop();
         hood.zeroEncoder();
-        System.out.println("Hood Zeroed");
     }
 }

@@ -120,11 +120,11 @@ public class Shooter extends SubsystemBase {
 
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
     SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
-    SmartDashboard.putNumber("RPS", leftRPS);
-    SmartDashboard.putNumber("Shooter Volts", shooterVolts);
-    SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
+    //SmartDashboard.putNumber("RPS", leftRPS);
+    //SmartDashboard.putNumber("Shooter Volts", shooterVolts);
+    //SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
     SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
-    SmartDashboard.putNumber("Shooter Left Motor Current", left.getSupplyCurrent().getValueAsDouble());
+    //SmartDashboard.putNumber("Shooter Left Motor Current", left.getSupplyCurrent().getValueAsDouble());
               
     // Command velocity with arbitrary feedforward voltage
 
