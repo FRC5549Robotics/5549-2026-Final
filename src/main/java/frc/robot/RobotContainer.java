@@ -334,6 +334,12 @@ public class RobotContainer {
         m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(2000), m_shooter));
         
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
+
+        new Trigger(() -> 
+            m_operator.getPOV() == 0 ||
+            m_operator.getPOV() == 45 ||
+            m_operator.getPOV() == 315
+        ).whileTrue(new InstantCommand(m_extension::extend, m_extension));
     }
 
     public GameState getGameState() {

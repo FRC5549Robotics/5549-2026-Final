@@ -28,7 +28,7 @@ public class Extension extends SubsystemBase{
 
     private double extensionSetpoint = 0;
     {
-        extensionPID.setTolerance(0.5);
+        extensionPID.setTolerance(1); //1 motor rotation of tolerance = 1/9 bottom pulley tolerance
     }
 
     //private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
@@ -59,8 +59,12 @@ public class Extension extends SubsystemBase{
 
     }
 
-    public void setAngle(double target) {
-        extensionSetpoint = target;
+    public void extend() {
+        extensionSetpoint = 19.5;
+    }
+
+    public void retract() {
+        extensionSetpoint = 0;
     }
 
     public boolean atTarget() {
@@ -100,7 +104,7 @@ public class Extension extends SubsystemBase{
         SmartDashboard.putNumber("extension Position", currentPos);
         SmartDashboard.putBoolean("extension PID enabled", PIDEnabled);
 
-        if (!PIDEnabled || !PIDEnabled) return;
+        if (!PIDEnabled || getCurrentCommand() != null) return;
 
         double output = extensionPID.calculate(currentPos, extensionSetpoint);
 

@@ -112,7 +112,7 @@ public class Hood extends SubsystemBase{
         SmartDashboard.putNumber("Hood Position", currentPos);
         //SmartDashboard.putBoolean("Hood PID enabled", PIDEnabled);
 
-        if (!PIDEnabled || !PIDEnabled) return;
+        if (!PIDEnabled || getCurrentCommand() != null) return;
 
         double output = hoodPID.calculate(currentPos, hoodSetpoint);
 
