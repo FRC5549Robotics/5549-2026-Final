@@ -9,15 +9,22 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 public class RobotStateEstimator extends SubsystemBase {
     private CommandSwerveDrivetrain m_SwerveDrivetrain;
     private boolean doRejectUpdate = false;
+    private int visionCounter = 0;
 
     public RobotStateEstimator(CommandSwerveDrivetrain swerve) {
         m_SwerveDrivetrain = swerve;
+                    m_SwerveDrivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(0.7,0.7,9999999));
     }
 
     @Override
     public void periodic() {
+        if (++visionCounter < 5) {
+            return;
+        }
+        visionCounter = 0;
+
         doRejectUpdate = false;
-        LimelightHelpers.SetRobotOrientation("limelight", m_SwerveDrivetrain.getPigeon2().getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
+        //LimelightHelpers.SetRobotOrientation("limelight", m_SwerveDrivetrain.getPigeon2().getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
         if (mt1 == null) {
             return;
@@ -32,7 +39,6 @@ public class RobotStateEstimator extends SubsystemBase {
             doRejectUpdate = true;
         }
         if (!doRejectUpdate) {
-            m_SwerveDrivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(0.7,0.7,9999999));
             m_SwerveDrivetrain.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);
         }
     }

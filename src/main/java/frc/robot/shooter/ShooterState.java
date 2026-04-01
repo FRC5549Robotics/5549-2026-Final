@@ -6,10 +6,12 @@ public class ShooterState implements Interpolatable<ShooterState> {
 
     public final double hoodAngleDeg;
     public final double flywheelRPM;
+    public final double timeOfFlight;
 
-    public ShooterState(double hoodAngleDeg, double flywheelRPM) {
+    public ShooterState(double hoodAngleDeg, double flywheelRPM, double timeOfFlight) {
         this.hoodAngleDeg = hoodAngleDeg;
         this.flywheelRPM = flywheelRPM;
+        this.timeOfFlight = timeOfFlight;
     }
 
     /**
@@ -19,12 +21,12 @@ public class ShooterState implements Interpolatable<ShooterState> {
     @Override
     public ShooterState interpolate(ShooterState endValue, double t) {
 
-        double newAngle =
-                hoodAngleDeg + (endValue.hoodAngleDeg - hoodAngleDeg) * t;
+        double newAngle = hoodAngleDeg + (endValue.hoodAngleDeg - hoodAngleDeg) * t;
 
-        double newRPM =
-                flywheelRPM + (endValue.flywheelRPM - flywheelRPM) * t;
+        double newRPM = flywheelRPM + (endValue.flywheelRPM - flywheelRPM) * t;
 
-        return new ShooterState(newAngle, newRPM);
+        double newTOF = timeOfFlight + (endValue.timeOfFlight - timeOfFlight) * t;
+
+        return new ShooterState(newAngle, newRPM, newTOF);
     }
 }

@@ -105,12 +105,12 @@ public class RobotContainer {
     private final Limelight m_limelight = new Limelight(drivetrain, m_driver);
     // private final Shooter m_Shooter = new Shooter();
     // private final Belt m_Belt = new Belt();
-    private final GroundIntake m_pivot = new GroundIntake();
+    private final Extension m_extension = new Extension();
+    private final GroundIntake m_pivot = new GroundIntake(m_extension);
     private final Belt m_belt = new Belt();
     private final Shooter m_shooter = new Shooter();
     private final Hood m_hood = new Hood();
     private final LED m_LED = new LED();
-    private final Extension m_extension = new Extension();
     // private final Candle m_leds = new Candle();
     private final GameState gameState = new GameState();
 
@@ -335,11 +335,8 @@ public class RobotContainer {
         
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
-        new Trigger(() -> 
-            m_operator.getPOV() == 0 ||
-            m_operator.getPOV() == 45 ||
-            m_operator.getPOV() == 315
-        ).whileTrue(new InstantCommand(m_extension::extend, m_extension));
+        m_operator.pov(0).or(m_operator.pov(45)).or(m_operator.pov(315)).onTrue(new InstantCommand(m_extension::extend, m_extension));
+        m_operator.pov(180).or(m_operator.pov(135)).or(m_operator.pov(225)).onTrue(new InstantCommand(m_extension::retract, m_extension));
     }
 
     public GameState getGameState() {

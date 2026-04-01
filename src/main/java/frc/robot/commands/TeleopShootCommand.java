@@ -121,8 +121,8 @@ public class TeleopShootCommand extends Command {
                     .withRotationalRate(omega)
             );
 
-            SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
-            SmartDashboard.putNumber("OmegaCmd", omega);
+            //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
+            //SmartDashboard.putNumber("OmegaCmd", omega);
 
             if (Math.abs(angleError) < Units.degreesToRadians(1) || Math.abs(angleError) > Units.degreesToRadians(359)) {
                 state = State.SPINNING_UP;

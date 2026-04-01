@@ -19,7 +19,7 @@ public class GroundIntake extends SubsystemBase {
     private final TalonFX intakeMotor;
     private final DutyCycleEncoder pivotAbsEncoder;
 
-    private double pivotTargetRotations;
+    private final Extension m_Extension;
 
     // your existing setpoints (continuous rotations style)
     private final double PIVOT_UP_POSITION   = 145;
@@ -29,7 +29,9 @@ public class GroundIntake extends SubsystemBase {
 
     private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
 
-    public GroundIntake() {
+    public GroundIntake(Extension extension) {
+        this.m_Extension = extension;
+
         pivotMotor = new SparkMax(Constants.PIVOT_MOTOR_ID, MotorType.kBrushless);
         pivotAbsEncoder = new DutyCycleEncoder(
             Constants.PIVOT_ABS_ENC_DIO,
@@ -63,6 +65,10 @@ public class GroundIntake extends SubsystemBase {
 
     }
 
+    private boolean extensionSafe() {
+        return m_Extension.getPosition() > 15;
+    }
+
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
     public double getPivotPosition() {
@@ -72,9 +78,11 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void setPivotUp() {
+        m_Extension.extend();
         if (getPivotPosition() > 220) {
-            pivotMotor.set(0.4);
-            //System.out.println("Going Up");
+            if (extensionSafe()) {
+                pivotMotor.set(0.4);
+            }
         } else {
             pivotMotor.set(0.0);
             intakeMotor.set(0.0);
@@ -84,48 +92,59 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void setPivotDown() {
+        m_Extension.extend();
         holdingAtTop = false;
-        intakeMotor.setControl(voltageRequest.withOutput(10)); //6
+        //intakeMotor.setControl(voltageRequest.withOutput(10)); //6
         if (getPivotPosition() < 275.5) {
-            pivotMotor.set(-0.4);
-            //System.out.println("Going Down");
+            if (extensionSafe()) {
+                pivotMotor.set(-0.4);
+            }
         } else {
             pivotMotor.set(0.0);
+            intakeMotor.setControl(voltageRequest.withOutput(10));
         }
     }
 
     public void setPivotUpFully() {
-        if (getPivotPosition() > 190) {
-            pivotMotor.set(0.4);
-            //System.out.println("Going Up");
+        m_Extension.extend();
+        if (getPivotPosition() > 170) {
+            if (extensionSafe()) {
+                pivotMotor.set(0.4);
+            }
         } else {
             pivotMotor.set(0.0);
             intakeMotor.set(0.0);
             holdingAtTop = true;
-            System.out.println("All the way up");
         }
     }
     
     public void setPivotDownFast() {
+        m_Extension.extend();
         holdingAtTop = false;
         intakeMotor.setControl(voltageRequest.withOutput(12)); 
         if (getPivotPosition() < 265) {
-            pivotMotor.set(-0.4);
-            //System.out.println("Going Down");
+            if (extensionSafe()) {
+                pivotMotor.set(-0.4);
+            }
         } else {
             pivotMotor.set(0.0);
         }
     }
 
     public void shooting() {
+        m_Extension.extend();
         holdingAtTop = false;
         double pos = getPivotPosition();
         
         System.out.println(pos);
         if (pos < 210) {
-            pivotMotor.set(-.2); //go down
+            if (extensionSafe()) {
+                pivotMotor.set(-0.2);
+            }
         } else if (pos > 220) {
-            pivotMotor.set(.2); //go up
+            if (extensionSafe()) {
+                pivotMotor.set(0.2);
+            }
         }
     }
 

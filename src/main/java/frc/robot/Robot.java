@@ -19,11 +19,14 @@ import frc.robot.commands.ZeroExtension;
 import frc.robot.commands.ZeroHood;
 import frc.robot.shooter.ShooterLookup;
 import frc.robot.util.GameState;
+import frc.robot.util.PowerMonitor;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private final RobotContainer m_robotContainer;
+
+    private PowerMonitor powerMonitor;
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -46,9 +49,17 @@ public class Robot extends TimedRobot {
             Preferences.initDouble("Shooter_Dist_" + i, 0.0);
             Preferences.initDouble("Shooter_Angle_" + i, 0.0);
             Preferences.initDouble("Shooter_RPM_" + i, 0.0);
+            Preferences.initDouble("Shooter_Time_" + i, 0.0);
         }
 
         NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(200);
+
+        DataLogManager.start();
+
+        String[] channels = new String[25];
+        channels[1] = "drive_front_left"; // port 1 = drive front left motor
+
+        powerMonitor = new PowerMonitor(channels);
     }
 
     @Override
@@ -56,6 +67,8 @@ public class Robot extends TimedRobot {
         m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run(); 
         m_robotContainer.getGameState().update();
+
+        powerMonitor.log();
     }
 
     @Override

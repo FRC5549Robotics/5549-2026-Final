@@ -73,6 +73,6 @@ public class Belt extends SubsystemBase{
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Belt RPM", belt_left.getVelocity().getValueAsDouble());
+        //SmartDashboard.putNumber("Belt RPM", belt_left.getVelocity().getValueAsDouble());
     }    
 }

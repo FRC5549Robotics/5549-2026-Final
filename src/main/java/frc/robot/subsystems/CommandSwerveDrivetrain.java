@@ -178,6 +178,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        Translation2d target = Constants.HUB.get();
+        m_field.getObject("HUB").setPose(new Pose2d(target, new Rotation2d()));
     }
 
     /**
@@ -347,9 +350,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void periodic() {
 
         m_field.setRobotPose(getPose());
-
-        Translation2d target = Constants.HUB.get();
-        m_field.getObject("HUB").setPose(new Pose2d(target, new Rotation2d()));
 
         Logger.recordOutput("RobotPose", getPose());
 

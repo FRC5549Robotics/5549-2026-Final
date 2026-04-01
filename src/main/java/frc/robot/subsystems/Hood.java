@@ -108,8 +108,8 @@ public class Hood extends SubsystemBase{
     public void periodic() {
         double currentPos = getHoodPosition();
 
-        SmartDashboard.putNumber("Hood Target", hoodSetpoint);
-        SmartDashboard.putNumber("Hood Position", currentPos);
+        //SmartDashboard.putNumber("Hood Target", hoodSetpoint);
+        //SmartDashboard.putNumber("Hood Position", currentPos);
         //SmartDashboard.putBoolean("Hood PID enabled", PIDEnabled);
 
         if (!PIDEnabled || getCurrentCommand() != null) return;

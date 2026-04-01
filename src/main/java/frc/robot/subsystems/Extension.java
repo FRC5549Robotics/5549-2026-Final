@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkMax;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
@@ -24,15 +25,16 @@ public class Extension extends SubsystemBase{
     private boolean PIDEnabled = false; //default to PID being off
 
     private final PIDController extensionPID = new PIDController(0.08, 0.0, 0.004); // kP, kI, kD
-    private static final double kS = 0.05;
+    private static final double kS = 0.12;
 
     private double extensionSetpoint = 0;
+
     {
-        extensionPID.setTolerance(1); //1 motor rotation of tolerance = 1/9 bottom pulley tolerance
+        extensionPID.setTolerance(1.2); //1 motor rotation of tolerance = 1/9 bottom pulley tolerance
     }
 
     //private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
-    private final DutyCycleOut homingRequest = new DutyCycleOut(0.13);
+    private final DutyCycleOut homingRequest = new DutyCycleOut(-0.12);
 
     TalonFX ExtensionMotor;
     TalonFXConfiguration ExtensionMotorConfig;
@@ -55,12 +57,14 @@ public class Extension extends SubsystemBase{
         ExtensionMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 4; // cap on velocity
         ExtensionMotorConfig.MotionMagic.MotionMagicAcceleration = 8; // cap on acceleration
 
+        ExtensionMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
         ExtensionMotor.getConfigurator().apply(ExtensionMotorConfig);
 
     }
 
     public void extend() {
-        extensionSetpoint = 19.5;
+        extensionSetpoint = 20;
     }
 
     public void retract() {
@@ -72,6 +76,7 @@ public class Extension extends SubsystemBase{
     }
 
     public void extensionDownSlow() {
+        extensionSetpoint = 0;
         ExtensionMotor.setControl(homingRequest);
     }
 
@@ -88,21 +93,25 @@ public class Extension extends SubsystemBase{
 
     public boolean atBottom() {
         boolean velocitySlow = Math.abs(ExtensionMotor.getVelocity().getValueAsDouble()) < 0.05;
-        SmartDashboard.putBoolean("velocitySlow", velocitySlow);
+        //SmartDashboard.putBoolean("velocitySlow", velocitySlow);
 
         boolean currentSpiked = ExtensionMotor.getStatorCurrent().getValueAsDouble() > 25.0;
-        SmartDashboard.putNumber("current", ExtensionMotor.getStatorCurrent().getValueAsDouble());
+        //SmartDashboard.putNumber("current", ExtensionMotor.getStatorCurrent().getValueAsDouble());
 
         return velocitySlow && currentSpiked;
+    }
+
+    public double getPosition() {
+        return ExtensionMotor.getPosition().getValueAsDouble();
     }
 
     @Override
     public void periodic() {
         double currentPos = ExtensionMotor.getPosition().getValueAsDouble();
 
-        SmartDashboard.putNumber("extension Target", extensionSetpoint);
-        SmartDashboard.putNumber("extension Position", currentPos);
-        SmartDashboard.putBoolean("extension PID enabled", PIDEnabled);
+        //SmartDashboard.putNumber("extension Target", extensionSetpoint);
+        //SmartDashboard.putNumber("extension Position", currentPos);
+        //SmartDashboard.putBoolean("extension PID enabled", PIDEnabled);
 
         if (!PIDEnabled || getCurrentCommand() != null) return;
 
@@ -113,11 +122,15 @@ public class Extension extends SubsystemBase{
         if (Math.abs(output) > 0.001) {
             output += Math.signum(output) * kS;
         }
-        
-        output = MathUtil.clamp(output, -0.25, 0.25);
+
+        output = MathUtil.clamp(output, -0.4, 0.4);
 
         if (atTarget()) {
-            ExtensionMotor.setControl(new NeutralOut());
+            //if (extensionSetpoint == 20 && currentPos < 19.5) {
+                //ExtensionMotor.setControl(new DutyCycleOut(0.1).withEnableFOC(true));
+            //} else {
+                ExtensionMotor.setControl(new NeutralOut());
+            //}
         } else {
             ExtensionMotor.setControl(new DutyCycleOut(output).withEnableFOC(true)); //move the hood
         }
