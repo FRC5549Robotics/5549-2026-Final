@@ -5,47 +5,26 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import org.littletonrobotics.junction.Logger;
-
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
-import frc.robot.Vision.LimelightHelpers;
-import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import com.ctre.phoenix6.swerve.SwerveRequest;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -55,7 +34,6 @@ import edu.wpi.first.networktables.NetworkTableInstance;
  * https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-
     private static final double kSimLoopPeriod = 0.004; // 4 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -71,29 +49,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
-    private final SwerveRequest.ApplyRobotSpeeds robotSpeedsReq = new SwerveRequest.ApplyRobotSpeeds();
-    private final SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric();
-
-    RobotConfig config; 
-    private final Field2d m_field = new Field2d();
-
-    public void aimDrive(double vx, double vy, double omega) {
-        this.setControl(
-            aimRequest
-                .withVelocityX(vx)
-                .withVelocityY(vy)
-                .withRotationalRate(omega)
-        );
-    }
-
-    public void stopDriving() {
-        this.setControl(
-            aimRequest
-                .withVelocityX(0.0)
-                .withVelocityY(0.0)
-                .withRotationalRate(0.0)
-        );
-    }
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -172,15 +127,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
-
-        SmartDashboard.putData("Field", m_field);
-
         if (Utils.isSimulation()) {
             startSimThread();
         }
-
-        Translation2d target = Constants.HUB.get();
-        m_field.getObject("HUB").setPose(new Pose2d(target, new Rotation2d()));
     }
 
     /**
@@ -202,80 +151,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, modules);
-
-        SmartDashboard.putData("Field", m_field);
-
-        //PATHPLANNER CONFIG
-
-        try{
-            config = RobotConfig.fromGUISettings();
-        } catch (Exception e){
-            e.printStackTrace();
-        }  
-    
-   
-
         if (Utils.isSimulation()) {
             startSimThread();
         }
     }
-
-    public void configurePathPlanner() {
-  RobotConfig cfg;
-  try {
-    cfg = RobotConfig.fromGUISettings();
-  } catch (Exception e) {
-    DriverStation.reportError(
-      "PathPlanner not configured: missing deploy/pathplanner/settings.json. " +
-      "Export Robot Config from PathPlanner to src/main/deploy/pathplanner/settings.json",
-      e.getStackTrace()
-    );
-    return; // ✅ prevents crash
-  }
-
-  AutoBuilder.configure(
-    this::getPose,
-    (pose) -> {
-        if (pose == null) {
-            DriverStation.reportError("PathPlanner resetPose got null (auto/path missing start pose or not deployed).", false);
-            return;
-        }
-        super.resetPose(pose);
-    },
-    () -> this.getState().Speeds,
-    (speeds, ff) -> this.setControl(robotSpeedsReq.withSpeeds(speeds)),
-    new PPHolonomicDriveController(
-      new PIDConstants(0.01, 0.0, 0.9),
-      new PIDConstants(1.0, 0.0, 0.05)
-    ),
-    cfg,
-    () -> DriverStation.getAlliance()
-        .map (a -> a == Alliance.Red)
-        .orElse(false),
-    //DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-    this
-  );
-}
-
-
-    public Pose2d getPose(){
-        return this.getState().Pose;
-    }
-    public void resetPose(Pose2d newPose) {
-        super.resetPose(newPose);
-    }  
-    public ChassisSpeeds getChassisSpeeds() {
-        return this.getState().Speeds;
-    }
-    public void driveRobotRelative(ChassisSpeeds speeds) {
-        // This immediately applies the request once. If you want it held continuously,
-        // call this every loop (e.g., from AutoBuilder's output lambda or a RunCommand).
-        this.setControl(robotSpeedsReq.withSpeeds(speeds));
-    }
-
-
-
-    
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -304,9 +183,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
-
-        SmartDashboard.putData("Field", m_field);
-
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -344,15 +220,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
-    private double lastVisionTime = 0;
-
     @Override
     public void periodic() {
-
-        m_field.setRobotPose(getPose());
-
-        Logger.recordOutput("RobotPose", getPose());
-
         /*
          * Periodically try to apply the operator perspective.
          * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
