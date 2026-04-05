@@ -60,7 +60,7 @@ public class TeleopShootCommand extends Command {
     private final Timer shootTimer = new Timer();
     private final Timer alignTimer = new Timer();
 
-    private final PIDController rotationPID = new PIDController(5, 0.0, 0);
+    private final PIDController rotationPID = new PIDController(5, 0.0, 0.005);
 
     public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
        this.drivetrain = drivetrain;
@@ -153,7 +153,6 @@ public class TeleopShootCommand extends Command {
            shooter.shoot(shot.flywheelRPM);
 
            if (shooter.atSpeed()) {
-
 
                if (!shootTimer.isRunning()) {
                    shootTimer.reset();

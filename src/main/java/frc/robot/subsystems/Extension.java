@@ -24,7 +24,7 @@ public class Extension extends SubsystemBase{
 
     private boolean PIDEnabled = false; //default to PID being off
 
-    private final PIDController extensionPID = new PIDController(0.08, 0.0, 0.004); // kP, kI, kD
+    private final PIDController extensionPID = new PIDController(0.1, 0.0, 0.004); // kP, kI, kD
     private static final double kS = 0.12;
 
     private double extensionSetpoint = 0;
@@ -34,7 +34,7 @@ public class Extension extends SubsystemBase{
     }
 
     //private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
-    private final DutyCycleOut homingRequest = new DutyCycleOut(-0.12);
+    private final DutyCycleOut homingRequest = new DutyCycleOut(-0.085);
 
     TalonFX ExtensionMotor;
     TalonFXConfiguration ExtensionMotorConfig;
@@ -69,6 +69,7 @@ public class Extension extends SubsystemBase{
 
     public void retract() {
         extensionSetpoint = 0;
+        System.out.println("hopper retracted");
     }
 
     public boolean atTarget() {

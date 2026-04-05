@@ -66,7 +66,7 @@ public class GroundIntake extends SubsystemBase {
     }
 
     private boolean extensionSafe() {
-        return m_Extension.getPosition() > 15;
+        return m_Extension.getPosition() > 10;
     }
 
     // absolute encoder -> adjusted -> unwrapped continuous rotations -> scaled
@@ -81,7 +81,7 @@ public class GroundIntake extends SubsystemBase {
         m_Extension.extend();
         if (getPivotPosition() > 220) {
             if (extensionSafe()) {
-                pivotMotor.set(0.4);
+                pivotMotor.set(0.6);
             }
         } else {
             pivotMotor.set(0.0);
@@ -92,12 +92,16 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void setPivotDown() {
-        m_Extension.extend();
         holdingAtTop = false;
         //intakeMotor.setControl(voltageRequest.withOutput(10)); //6
         if (getPivotPosition() < 275.5) {
-            if (extensionSafe()) {
-                pivotMotor.set(-0.4);
+            if (getPivotPosition() < 240) { //if intake is too far back, extend hopper before deploying intake
+                m_Extension.extend();
+                if (extensionSafe()) {
+                    pivotMotor.set(-0.4);
+                }
+            } else {
+                pivotMotor.set(-0.4); //if its already out enough, don't worry about the extension
             }
         } else {
             pivotMotor.set(0.0);
@@ -119,15 +123,28 @@ public class GroundIntake extends SubsystemBase {
     }
     
     public void setPivotDownFast() {
-        m_Extension.extend();
         holdingAtTop = false;
-        intakeMotor.setControl(voltageRequest.withOutput(12)); 
-        if (getPivotPosition() < 265) {
-            if (extensionSafe()) {
-                pivotMotor.set(-0.4);
+        //intakeMotor.setControl(voltageRequest.withOutput(10)); //6
+        if (getPivotPosition() < 275.5) {
+            if (getPivotPosition() < 240) { //if intake is too far back, extend hopper before deploying intake
+                m_Extension.extend();
+                if (extensionSafe()) {
+                    pivotMotor.set(-0.4);
+                }
+            } else {
+                pivotMotor.set(-0.4); //if its already out enough, don't worry about the extension
             }
         } else {
             pivotMotor.set(0.0);
+            intakeMotor.setControl(voltageRequest.withOutput(12));
+        }
+    }
+
+    public void retractForExtension() {
+        double pos = getPivotPosition();
+
+        if (pos < 190 && pos > 170) { //if pivot is too far up but not all the way back
+            pivotMotor.set(0.4); //fully retract the intake
         }
     }
 
@@ -136,20 +153,20 @@ public class GroundIntake extends SubsystemBase {
         holdingAtTop = false;
         double pos = getPivotPosition();
         
-        System.out.println(pos);
-        if (pos < 210) {
+        //System.out.println(pos);
+        if (pos < 240) {
             if (extensionSafe()) {
-                pivotMotor.set(-0.2);
+                pivotMotor.set(-0.4);
             }
-        } else if (pos > 220) {
+        } else if (pos > 250) {
             if (extensionSafe()) {
-                pivotMotor.set(0.2);
+                pivotMotor.set(0.4);
             }
         }
     }
 
     public void IntakeReverse() {
-        intakeMotor.set(0.3);
+        intakeMotor.set(-0.3);
     }
 
     public void IntakeOn(){
@@ -175,6 +192,7 @@ public class GroundIntake extends SubsystemBase {
         if (holdingAtTop) {
             pivotMotor.set(0.1);
         }
-
+        
+        SmartDashboard.putNumber("extension position", m_Extension.getPosition());
     }
 }

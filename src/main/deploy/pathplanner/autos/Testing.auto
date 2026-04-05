@@ -5,22 +5,21 @@
     "data": {
       "commands": [
         {
-          "type": "sequential",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "testing path"
-                }
-              }
-            ]
+            "pathName": "testing path"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "AutoShootCommand"
+            "name": "PivotDownAndIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RetractHopper"
           }
         }
       ]

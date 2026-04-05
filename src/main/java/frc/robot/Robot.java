@@ -68,7 +68,7 @@ public class Robot extends TimedRobot {
         CommandScheduler.getInstance().run(); 
         m_robotContainer.getGameState().update();
 
-        powerMonitor.log();
+        //powerMonitor.log();
     }
 
     @Override

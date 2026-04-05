@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Double Left Side Close Pt1"
+                  "pathName": "Citrus Left Side Close Pt1"
                 }
               },
               {
@@ -28,12 +28,6 @@
                       "type": "named",
                       "data": {
                         "name": "PivotDownAndIntake"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "RetractHopper"
                       }
                     }
                   ]
@@ -55,7 +49,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Double Left Side Close Pt2"
+                  "pathName": "Citrus Left Side Close Pt2 Big Bite"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "RetractHopper"
                 }
               },
               {
@@ -65,7 +65,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 0.8
+                        "waitTime": 1.5
                       }
                     },
                     {
@@ -73,23 +73,11 @@
                       "data": {
                         "name": "PivotDownAndIntake"
                       }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "RetractHopper"
-                      }
                     }
                   ]
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AutoShootCommand"
           }
         }
       ]

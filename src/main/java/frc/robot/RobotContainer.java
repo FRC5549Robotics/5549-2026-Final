@@ -103,8 +103,6 @@ public class RobotContainer {
     //POVButton raiseHood = new POVButton(m_operator.getHID(), 0);
 
     private final Limelight m_limelight = new Limelight(drivetrain, m_driver);
-    // private final Shooter m_Shooter = new Shooter();
-    // private final Belt m_Belt = new Belt();
     private final Extension m_extension = new Extension();
     private final GroundIntake m_pivot = new GroundIntake(m_extension);
     private final Belt m_belt = new Belt();
@@ -151,24 +149,21 @@ public class RobotContainer {
         
         NamedCommands.registerCommand("RunBelt", new InstantCommand(m_belt::intake));
         NamedCommands.registerCommand("WaitAndBelt", beltCommand());
-        NamedCommands.registerCommand("PivotUp", new StartEndCommand(
+        NamedCommands.registerCommand("PivotUp", new RunCommand(
                 () -> m_pivot.setPivotUp(), //what to run while active
-                () -> m_pivot.off(), //what to run to end it
                 m_pivot
             ).withTimeout(2.15) //how long to run it
         );
         NamedCommands.registerCommand("OffBelt", new InstantCommand(m_belt::off));
-        NamedCommands.registerCommand("PivotDownAndIntake", new StartEndCommand(
+        NamedCommands.registerCommand("PivotDownAndIntake", new RunCommand(
                 () -> m_pivot.setPivotDownFast(), //what to run while active
-                () -> m_pivot.off(), //what to run to end it
                 m_pivot
             ).withTimeout(5) //how long to run it
         );
-        NamedCommands.registerCommand("PivotDownAndIntakeFull", new StartEndCommand(
+        NamedCommands.registerCommand("PivotDownAndIntakeFull", new RunCommand(
                 () -> m_pivot.setPivotDownFast(), //what to run while active
-                () -> m_pivot.off(), //what to run to end it
                 m_pivot
-            ).withTimeout(6) //how long to run it
+            ).withTimeout(10) //how long to run it
         );
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
         NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(1800), m_shooter));
@@ -189,10 +184,11 @@ public class RobotContainer {
             new SequentialCommandGroup(
                 new ZeroHood(m_hood),
                 new ParallelCommandGroup(new InstantCommand(m_pivot:: IntakeOn), new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
-                .withTimeout(4))
+                .withTimeout(7))
                 
             )
         );
+        NamedCommands.registerCommand("retractHopper", new InstantCommand(m_extension::retract));
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -283,6 +279,9 @@ public class RobotContainer {
         // groundIntakeButton.whileTrue(new InstantCommand(m_pivot :: pivotDown)).onFalse(new InstantCommand(m_pivot::off));
         
         //operator intake controls
+        m_operator.axisGreaterThan(5, Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotDown, m_pivot)).onFalse(new InstantCommand(m_pivot::off, m_pivot)); 
+        m_operator.axisLessThan(5, -Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotUp, m_pivot)).onFalse(new InstantCommand(m_pivot::off, m_pivot)); 
+
         m_operator.axisGreaterThan(1, Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotDown, m_pivot)).onFalse(new InstantCommand(m_pivot::off, m_pivot)); 
         m_operator.axisLessThan(1, -Constants.TRIGGER_DEADBAND).whileTrue(new RunCommand(m_pivot::setPivotUp, m_pivot)).onFalse(new InstantCommand(m_pivot::off, m_pivot)); 
         //groundIntakeShakeButton.whileTrue(new RunCommand(m_pivot::shooting, m_pivot)); //RB to shake
@@ -292,34 +291,21 @@ public class RobotContainer {
         m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
             .whileTrue(
                 new ParallelCommandGroup(
-
-                    //Only run belts when shooter is up to speed
-                    new RunCommand(() -> {
-                        if (m_shooter.atSpeed()) {
-                            m_belt.intake();
-                            //System.out.println("belts run!");
-                        } else {
-                            m_belt.intake();
-                            //m_belt.off();
-                            //System.out.println("belt not run");
-                        }
-                    }, m_belt),
-
-                    //X formation wheels
-                    //drivetrain.applyRequest(() -> brake),
-
-                    // Wait 1.5 sec, then run shooting() continuously
-                    new SequentialCommandGroup(
-                        new WaitCommand(1.5)
-                        //new RunCommand(m_pivot::shooting, m_pivot)
-                    )
+                    new RunCommand(() -> m_shooter.shoot(2000), m_shooter),
+                    new RunCommand(m_belt::intake, m_belt)
                 )
             )
             .onFalse(
                 new ParallelCommandGroup(
+                    new InstantCommand(m_shooter::off, m_shooter),
                     new InstantCommand(m_belt::off, m_belt)
                 )
             );
+
+        m_operator.axisGreaterThan(2, Constants.TRIGGER_DEADBAND)
+            .whileTrue(new RunCommand(m_pivot::IntakeReverse, m_pivot))
+            .onFalse(new InstantCommand(m_pivot::off, m_pivot));
+
 
         //setpoint for shooting close to hub
         m_operator.button(4).onTrue(new InstantCommand(() -> m_hood.setAngle(78.0), m_hood));
@@ -329,14 +315,18 @@ public class RobotContainer {
         m_operator.button(4).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
         //setpoint for passing
-        m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
+        //m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
 
-        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(2000), m_shooter));
+        //m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(2000), m_shooter));
         
-        m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
+        //m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
         m_operator.pov(0).or(m_operator.pov(45)).or(m_operator.pov(315)).onTrue(new InstantCommand(m_extension::extend, m_extension));
-        m_operator.pov(180).or(m_operator.pov(135)).or(m_operator.pov(225)).onTrue(new InstantCommand(m_extension::retract, m_extension));
+        m_operator.pov(180).or(m_operator.pov(135)).or(m_operator.pov(225))
+            .onTrue(new ParallelCommandGroup(
+                new InstantCommand(m_pivot::retractForExtension, m_pivot),
+                new InstantCommand(m_extension::retract, m_extension)
+            ));
     }
 
     public GameState getGameState() {

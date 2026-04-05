@@ -85,18 +85,22 @@ public class AutoShootCommand extends Command {
     @Override
     public void execute() {
 
+        SmartDashboard.putString("state", state.toString());
+
         if (state == State.ALIGNING) {
             Translation2d robot = drivetrain.getState().Pose.getTranslation();
             Translation2d target = Constants.HUB.get();
 
-            Rotation2d direction = target.minus(robot).getAngle().plus(Rotation2d.fromRadians(Math.PI));
+            Rotation2d direction = target.minus(robot).getAngle();
 
             double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
             double targetAngle = direction.getRadians();
 
-            double omega = rotationPID.calculate(currentAngle, targetAngle);
+            double omega = rotationPID.calculate(currentAngle + Math.PI, targetAngle);
 
             double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
+
+            angleError = angleError + Math.PI;
 
             double kS = 0.36;
 
@@ -108,8 +112,8 @@ public class AutoShootCommand extends Command {
 
             drivetrain.setControl(
                 drive
-                    .withVelocityX(0)
-                    .withVelocityY(0)
+                    .withVelocityX(MaxSpeed * -joystick.getLeftY())
+                    .withVelocityY(MaxSpeed * -joystick.getLeftX())
                     .withRotationalRate(omega)
             );
 
@@ -122,20 +126,22 @@ public class AutoShootCommand extends Command {
         }
 
        if (state == State.SPINNING_UP) {
-           drivetrain.stopDriving();
+            drivetrain.stopDriving();
 
-           double distance = limelight.getDistanceToTagMeters();
+            Translation2d robot = drivetrain.getState().Pose.getTranslation();
+            Translation2d target = Constants.HUB.get();
+
+            double distance = robot.getDistance(target);
+
            SmartDashboard.putNumber("Distance", distance);
 
            if (distance <= 0) {
                return;
            }
 
-
            ShooterState shot = ShooterLookup.get(distance);
            hood.setAngle(shot.hoodAngleDeg);
            shooter.shoot(shot.flywheelRPM);
-
 
            if (shooter.atSpeed()) {
 
@@ -145,10 +151,9 @@ public class AutoShootCommand extends Command {
                    shootTimer.start();
                }
           
-                if (shootTimer.hasElapsed(0.1)) {
-                    shootTimer.restart();
-                    state = State.SHOOTING;
-                }
+               if (shootTimer.hasElapsed(0.2)) {
+                   state = State.SHOOTING;
+               }
           
            } else {
                shootTimer.stop();
@@ -163,7 +168,7 @@ public class AutoShootCommand extends Command {
 
            belt.intake();
 
-            if (shootTimer.hasElapsed(2)) {
+            if (shootTimer.hasElapsed(3.5)) {
                 intake.shooting();
             }
 
