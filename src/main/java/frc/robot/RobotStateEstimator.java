@@ -13,7 +13,7 @@ public class RobotStateEstimator extends SubsystemBase {
 
     public RobotStateEstimator(CommandSwerveDrivetrain swerve) {
         m_SwerveDrivetrain = swerve;
-                    m_SwerveDrivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(0.7,0.7,9999999));
+                    m_SwerveDrivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(0.4,0.4,9999999));
     }
 
     @Override

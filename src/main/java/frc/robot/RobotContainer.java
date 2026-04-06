@@ -22,6 +22,7 @@ import frc.robot.commands.AimAndSpinUpCommand;
 import frc.robot.commands.AlignLimelight;
 import frc.robot.commands.AutoShootCommand;
 import frc.robot.commands.TeleopShootCommand;
+import frc.robot.commands.ZeroExtensionTeleop;
 import frc.robot.commands.ZeroHood;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -134,7 +135,8 @@ public class RobotContainer {
     }
 
     // AUTOCHOOSER SET UP
-    private final SendableChooser<Command> autoChooser;
+    private SendableChooser<Command> autoChooser;
+
     public Command beltCommand(){
         return new WaitCommand(0.5).andThen(() -> m_belt.intake());
     }
@@ -188,10 +190,41 @@ public class RobotContainer {
                 
             )
         );
-        NamedCommands.registerCommand("retractHopper", new InstantCommand(m_extension::retract));
+        NamedCommands.registerCommand(
+            "4sQuickAutoShootCommand",
+            new SequentialCommandGroup(
+                new ZeroHood(m_hood),
+                new ParallelCommandGroup(new InstantCommand(m_pivot:: IntakeOn), new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
+                .withTimeout(4))
+                
+            )
+        );
+        NamedCommands.registerCommand("RetractHopper", new InstantCommand(m_extension::retract));
 
-        autoChooser = AutoBuilder.buildAutoChooser();
+        NamedCommands.registerCommand("ExtendHopper", new InstantCommand(m_extension::extend));
+
+        //autoChooser = AutoBuilder.buildAutoChooser();
+        //SmartDashboard.putData("Auto Chooser", autoChooser);
+
+        SendableChooser<Boolean> flipChooser = new SendableChooser<>();
+        flipChooser.setDefaultOption("Not Flipped", false);
+        flipChooser.addOption("Flipped", true);
+        SmartDashboard.putData("Flip Chooser", flipChooser);
+
+        flipChooser.onChange((Boolean flip) -> {
+            autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
+                autoStream -> autoStream.map(auto -> new PathPlannerAuto(auto.getName(), flip))
+            );
+            SmartDashboard.putData("AutoChooser", autoChooser);
+        });
+
+        autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
+            autoStream -> autoStream.map(
+                auto -> new PathPlannerAuto(auto.getName(), flipChooser.getSelected())
+            )
+        );
         SmartDashboard.putData("Auto Chooser", autoChooser);
+
         m_LED.setStateSupplier(() -> {
 
             boolean hubInactive = gameState.isHubInactiveNow();
@@ -263,13 +296,15 @@ public class RobotContainer {
         m_driver.start().and(m_driver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
         m_driver.axisGreaterThan(3, .7).whileTrue(new RunCommand(m_pivot:: setPivotUp )).onFalse(new InstantCommand(m_pivot:: off));
          m_driver.axisGreaterThan(2, .7).whileTrue(new RunCommand(m_pivot:: setPivotUpFully )).onFalse(new InstantCommand(m_pivot:: off));
+         m_driver.button(5).whileTrue(new RunCommand(m_pivot::setPivotDown)).onFalse(new InstantCommand(m_pivot:: off));
 
         //m_driver.pov(0).whileTrue(Commands.run(() -> m_shooter.runCharacterization(2.0), m_shooter));
         //m_driver.pov(180).whileTrue(Commands.run(() -> m_shooter.runCharacterization(8.0), m_shooter));
 
 
         // Reset the field-centric heading on left bumper press.
-        resetOdometry.onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        //resetOdometry.onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        resetOdometry.onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.fromDegrees(180))));
 
         drivetrain.registerTelemetry(logger::telemeterize);
         // joystick.povRight().onTrue(new AlignLimelight(true, drivetrain).withTimeout(3));
@@ -327,6 +362,8 @@ public class RobotContainer {
                 new InstantCommand(m_pivot::retractForExtension, m_pivot),
                 new InstantCommand(m_extension::retract, m_extension)
             ));
+
+        m_operator.button(8).onTrue(new ZeroExtensionTeleop(m_extension));
     }
 
     public GameState getGameState() {
@@ -359,23 +396,6 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
 
         System.out.println("getAutonomousCommand");
-        return new PathPlannerAuto(autoChooser.getSelected());
-    
-        // // Simple drive forward auton
-        // final var idle = new SwerveRequest.Idle();
-        // return Commands.sequence(
-        //     // Reset our field centric heading to match the robot
-        //     // facing away from our alliance station wall (0 deg).
-        //     drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-        //     // Then slowly drive forward (away from us) for 5 seconds.
-        //     drivetrain.applyRequest(() ->
-        //         drive.withVelocityX(0.5)
-        //             .withVelocityY(0)
-        //             .withRotationalRate(0)
-        //     )
-        //     .withTimeout(5.0),
-        //     // Finally idle for the rest of auton
-        //     drivetrain.applyRequest(() -> idle)
-        // );
+        return autoChooser.getSelected();
     }
 }

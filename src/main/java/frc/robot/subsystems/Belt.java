@@ -61,10 +61,10 @@ public class Belt extends SubsystemBase{
 
     
     public void intake(){
-        belt_right.setControl(velocityRequest.withVelocity(75)); 
+        belt_right.setControl(velocityRequest.withVelocity(100)); 
     }
     public void jammed(){
-        belt_right.setControl(velocityRequest.withVelocity(-50)); //run belts backwards
+        belt_right.setControl(velocityRequest.withVelocity(-75)); //run belts backwards
     }
     
     public void off(){

@@ -109,7 +109,7 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         new ZeroHood(m_robotContainer.getHood()).schedule();
         
-        new ZeroExtension(m_robotContainer.getExtension()).schedule();
+        //new ZeroExtension(m_robotContainer.getExtension()).schedule();
 
         NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(0);
 

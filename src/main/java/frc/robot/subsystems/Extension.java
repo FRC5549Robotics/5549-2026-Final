@@ -81,18 +81,32 @@ public class Extension extends SubsystemBase{
         ExtensionMotor.setControl(homingRequest);
     }
 
-    public void stop() {
-        ExtensionMotor.setControl(new NeutralOut());
-        System.out.println("extension motor stop() ran");
-        PIDEnabled = true;
-    }
+    //public void stop() {
+        //ExtensionMotor.setControl(new NeutralOut());
+        //System.out.println("extension motor stop() ran");
+        //PIDEnabled = true;
+    //}
 
     public void zeroEncoder() {
+        ExtensionMotor.setControl(new NeutralOut());
         ExtensionMotor.setPosition(0);
-        System.out.println("extension zeroed");
+        PIDEnabled = true;
+        System.out.println("PID enabled = true");
     }
 
     public boolean atBottom() {
+        //boolean velocitySlow = Math.abs(ExtensionMotor.getVelocity().getValueAsDouble()) < 0.05;
+        //SmartDashboard.putBoolean("velocitySlow", velocitySlow);
+
+        //boolean currentSpiked = ExtensionMotor.getStatorCurrent().getValueAsDouble() > 25.0;
+        //SmartDashboard.putNumber("current", ExtensionMotor.getStatorCurrent().getValueAsDouble());
+
+        //return velocitySlow && currentSpiked;
+
+        return true; //just assume its at the bottom and we put it all the way down
+    }
+
+    public boolean atBottomTeleop() {
         boolean velocitySlow = Math.abs(ExtensionMotor.getVelocity().getValueAsDouble()) < 0.05;
         //SmartDashboard.putBoolean("velocitySlow", velocitySlow);
 
@@ -114,7 +128,7 @@ public class Extension extends SubsystemBase{
         //SmartDashboard.putNumber("extension Position", currentPos);
         //SmartDashboard.putBoolean("extension PID enabled", PIDEnabled);
 
-        if (!PIDEnabled || getCurrentCommand() != null) return;
+        if (!PIDEnabled) return;
 
         double output = extensionPID.calculate(currentPos, extensionSetpoint);
 

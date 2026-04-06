@@ -5,21 +5,21 @@
     "data": {
       "commands": [
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AutoShootCommand"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "testing path"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "PivotDownAndIntake"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "RetractHopper"
           }
         }
       ]

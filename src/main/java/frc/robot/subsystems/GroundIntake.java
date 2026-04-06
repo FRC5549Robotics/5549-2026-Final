@@ -87,13 +87,14 @@ public class GroundIntake extends SubsystemBase {
             pivotMotor.set(0.0);
             intakeMotor.set(0.0);
             holdingAtTop = true;
-            System.out.println("All the way up");
+            //System.out.println("All the way up");
         }
     }
 
     public void setPivotDown() {
         holdingAtTop = false;
         //intakeMotor.setControl(voltageRequest.withOutput(10)); //6
+        //System.out.println("down called");
         if (getPivotPosition() < 275.5) {
             if (getPivotPosition() < 240) { //if intake is too far back, extend hopper before deploying intake
                 m_Extension.extend();
@@ -170,7 +171,7 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void IntakeOn(){
-        intakeMotor.set(.3);
+        //intakeMotor.set(.3);
     }
 
     public void off() {

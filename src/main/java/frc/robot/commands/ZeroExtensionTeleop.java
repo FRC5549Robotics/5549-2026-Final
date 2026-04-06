@@ -4,12 +4,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Extension;
 import edu.wpi.first.wpilibj.Timer;
 
-public class ZeroExtension extends Command {
+public class ZeroExtensionTeleop extends Command {
     private final Timer timer = new Timer();
 
     private final Extension extension;
 
-    public ZeroExtension(Extension extension) {
+    public ZeroExtensionTeleop(Extension extension) {
         this.extension = extension;
         addRequirements(extension);
     }
@@ -23,17 +23,16 @@ public class ZeroExtension extends Command {
 
     @Override
     public void execute() {
-        //extension.extensionDownSlow();
+        extension.extensionDownSlow();
     }
 
     @Override
     public boolean isFinished() {
-        return extension.atBottom();
+        return extension.atBottomTeleop();
     }
 
     @Override
     public void end(boolean interrupted) {
-        //extension.stop();
         extension.zeroEncoder();
     }
 }
