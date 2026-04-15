@@ -1,8 +1,10 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
@@ -16,7 +18,8 @@ import frc.robot.Constants;
 public class GroundIntake extends SubsystemBase {
 
     private final SparkMax pivotMotor;
-    private final TalonFX intakeMotor;
+    private final TalonFX intakeMotorLeft;
+    //private final TalonFX intakeMotorRight;
     private final DutyCycleEncoder pivotAbsEncoder;
 
     private final Extension m_Extension;
@@ -28,6 +31,9 @@ public class GroundIntake extends SubsystemBase {
     private boolean holdingAtTop = false;
 
     private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
+
+    //right follows left
+    //private final Follower intake_Right_Follower = new Follower(Constants.GROUND_INTAKE_ID, MotorAlignmentValue.Opposed);
 
     public GroundIntake(Extension extension) {
         this.m_Extension = extension;
@@ -50,7 +56,9 @@ public class GroundIntake extends SubsystemBase {
             com.revrobotics.PersistMode.kPersistParameters
         );
 
-        intakeMotor = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker");
+        intakeMotorLeft = new TalonFX(Constants.GROUND_INTAKE_ID, "lil clanker");
+        //intakeMotorRight = new TalonFX(Constants.SECOND_GROUND_INTAKE_ID, "lil clanker");
+
         TalonFXConfiguration intakeConfig = new TalonFXConfiguration();
         intakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -61,8 +69,11 @@ public class GroundIntake extends SubsystemBase {
 
         intakeConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.08; //0.08s to reach max voltage
 
-        intakeMotor.getConfigurator().apply(intakeConfig);
+        intakeMotorLeft.getConfigurator().apply(intakeConfig);
+        //intakeMotorRight.getConfigurator().apply(intakeConfig);
 
+        //intakeMotorRight.setControl(intake_Right_Follower);
+         
     }
 
     private boolean extensionSafe() {
@@ -85,7 +96,7 @@ public class GroundIntake extends SubsystemBase {
             }
         } else {
             pivotMotor.set(0.0);
-            intakeMotor.set(0.0);
+            intakeMotorLeft.set(0.0);
             holdingAtTop = true;
             //System.out.println("All the way up");
         }
@@ -93,10 +104,10 @@ public class GroundIntake extends SubsystemBase {
 
     public void setPivotDown() {
         holdingAtTop = false;
-        //intakeMotor.setControl(voltageRequest.withOutput(10)); //6
+        //intakeMotorLeft.setControl(voltageRequest.withOutput(10)); //6
         //System.out.println("down called");
         if (getPivotPosition() < 275.5) {
-            if (getPivotPosition() < 240) { //if intake is too far back, extend hopper before deploying intake
+            if (getPivotPosition() < 200) { //if intake is too far back, extend hopper before deploying intake
                 m_Extension.extend();
                 if (extensionSafe()) {
                     pivotMotor.set(-0.4);
@@ -106,7 +117,7 @@ public class GroundIntake extends SubsystemBase {
             }
         } else {
             pivotMotor.set(0.0);
-            intakeMotor.setControl(voltageRequest.withOutput(10));
+            intakeMotorLeft.setControl(voltageRequest.withOutput(10));
         }
     }
 
@@ -118,16 +129,16 @@ public class GroundIntake extends SubsystemBase {
             }
         } else {
             pivotMotor.set(0.0);
-            intakeMotor.set(0.0);
+            intakeMotorLeft.set(0.0);
             holdingAtTop = true;
         }
     }
     
     public void setPivotDownFast() {
         holdingAtTop = false;
-        //intakeMotor.setControl(voltageRequest.withOutput(10)); //6
+        //intakeMotorLeft.setControl(voltageRequest.withOutput(10)); //6
         if (getPivotPosition() < 275.5) {
-            if (getPivotPosition() < 240) { //if intake is too far back, extend hopper before deploying intake
+            if (getPivotPosition() < 200) { //if intake is too far back, extend hopper before deploying intake
                 m_Extension.extend();
                 if (extensionSafe()) {
                     pivotMotor.set(-0.4);
@@ -137,7 +148,7 @@ public class GroundIntake extends SubsystemBase {
             }
         } else {
             pivotMotor.set(0.0);
-            intakeMotor.setControl(voltageRequest.withOutput(12));
+            intakeMotorLeft.setControl(voltageRequest.withOutput(12));
         }
     }
 
@@ -167,16 +178,16 @@ public class GroundIntake extends SubsystemBase {
     }
 
     public void IntakeReverse() {
-        intakeMotor.set(-0.3);
+        intakeMotorLeft.set(-0.3);
     }
 
     public void IntakeOn(){
-        //intakeMotor.set(.3);
+        //intakeMotorLeft.set(.3);
     }
 
     public void off() {
         //System.out.println("pivotDisabled");
-        intakeMotor.set(0.0);
+        intakeMotorLeft.set(0.0);
         pivotMotor.set(0.0);
         holdingAtTop = false;
     }
@@ -186,14 +197,14 @@ public class GroundIntake extends SubsystemBase {
         // ALWAYS push raw encoder debug so you can see if it's alive
         double raw = pivotAbsEncoder.get();
 
-        SmartDashboard.putNumber("GI DIO Channel", Constants.PIVOT_ABS_ENC_DIO);
-        SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected());
-        SmartDashboard.putNumber("GI Enc Degrees", raw);
+        //SmartDashboard.putNumber("GI DIO Channel", Constants.PIVOT_ABS_ENC_DIO);
+        //SmartDashboard.putBoolean("GI Enc Connected", pivotAbsEncoder.isConnected());
+        //SmartDashboard.putNumber("GI Enc Degrees", raw);
 
         if (holdingAtTop) {
             pivotMotor.set(0.1);
         }
         
-        SmartDashboard.putNumber("extension position", m_Extension.getPosition());
+        //SmartDashboard.putNumber("extension position", m_Extension.getPosition());
     }
 }

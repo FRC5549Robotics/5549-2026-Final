@@ -5,21 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 5.0
+            "pathName": "testing path"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "AutoShootCommand"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "testing path"
           }
         }
       ]

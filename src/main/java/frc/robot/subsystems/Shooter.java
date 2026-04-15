@@ -53,9 +53,9 @@ public class Shooter extends SubsystemBase {
   public Shooter() { //shooter constructor
     TalonFXConfiguration cfg = new TalonFXConfiguration();
 
-    cfg.CurrentLimits.StatorCurrentLimit = 80; //used to be 120
+    cfg.CurrentLimits.StatorCurrentLimit = 70; //used to be 120
     cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-    cfg.CurrentLimits.SupplyCurrentLimit = 30; //used to be 50
+    cfg.CurrentLimits.SupplyCurrentLimit = 35; //used to be 50
     cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Flywheels usually feel better on COAST, not BRAKE.
@@ -120,12 +120,12 @@ public class Shooter extends SubsystemBase {
     double ffVolts = ff.calculate(targetRPS);
     double shooterVolts = left.getMotorVoltage().getValueAsDouble();
 
-    SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
-    SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
+    //SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
+    //SmartDashboard.putNumber("Shooter Left RPM", leftRPM);
     //SmartDashboard.putNumber("RPS", leftRPS);
     //SmartDashboard.putNumber("Shooter Volts", shooterVolts);
     //SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
-    SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
+    //SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
     //SmartDashboard.putNumber("Shooter Left Motor Current", left.getSupplyCurrent().getValueAsDouble());
               
     // Command velocity with arbitrary feedforward voltage

@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.DegreesPerSecond;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -64,7 +63,7 @@ public class Extension extends SubsystemBase{
     }
 
     public void extend() {
-        extensionSetpoint = 20;
+        extensionSetpoint = 21.5;
     }
 
     public void retract() {

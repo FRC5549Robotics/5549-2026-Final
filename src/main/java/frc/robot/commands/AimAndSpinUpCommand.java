@@ -23,7 +23,7 @@ public class AimAndSpinUpCommand extends Command {
     @Override
     public void execute() {
         double distance = limelight.getDistanceToTagMeters();
-        SmartDashboard.putNumber("Distance", distance);
+        //SmartDashboard.putNumber("Distance", distance);
 
         if (distance <= 0) {
             return;

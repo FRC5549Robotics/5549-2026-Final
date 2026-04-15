@@ -201,6 +201,7 @@ public final class Constants {
     public static final int GROUND_INTAKE_ID = 17;
     public static final double GROUND_PIVOT_SPEED = 0.15;
     public static final int PIVOT_ABS_ENC_DIO =4;
+    public static final int SECOND_GROUND_INTAKE_ID = 22;
 
   //Belt Constants
     public static final int BELT_RIGHT_MOTOR_ID = 14;

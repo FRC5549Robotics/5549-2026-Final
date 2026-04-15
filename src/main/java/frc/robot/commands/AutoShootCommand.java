@@ -35,12 +35,7 @@ public class AutoShootCommand extends Command {
     private final Belt belt;
     private final GroundIntake intake;
 
-    private final LinearFilter txFilter = LinearFilter.movingAverage(4);
-
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
-    private int lastPipeline = -1;
-    private int lockedTagID = -1;
 
     Boolean second = false;
 
@@ -56,9 +51,9 @@ public class AutoShootCommand extends Command {
 
     private final Timer alignTimer = new Timer();
 
-    private final Timer tagLostTimer = new Timer();
-
     boolean waitingForPipeline = false;
+
+    private final PIDController rotationPID = new PIDController(5, 0.0, 0.005);
 
     public AutoShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake) {
         this.drivetrain = drivetrain;
@@ -68,7 +63,9 @@ public class AutoShootCommand extends Command {
         this.belt = belt;
         this.intake = intake;
 
-        addRequirements(drivetrain, shooter, hood, belt, intake);
+        rotationPID.enableContinuousInput(-Math.PI, Math.PI);
+
+        addRequirements(drivetrain, shooter, belt);
     }
 
     private final double MaxSpeed = 4.5;
@@ -80,12 +77,10 @@ public class AutoShootCommand extends Command {
 
    private XboxController joystick = new XboxController(0);
 
-    private final PIDController rotationPID = new PIDController(5, 0.0, 0);
-
     @Override
     public void execute() {
 
-        SmartDashboard.putString("state", state.toString());
+        //SmartDashboard.putString("state", state.toString());
 
         if (state == State.ALIGNING) {
             Translation2d robot = drivetrain.getState().Pose.getTranslation();
@@ -102,7 +97,7 @@ public class AutoShootCommand extends Command {
 
             angleError = angleError + Math.PI;
 
-            double kS = 0.36;
+            double kS = 0.45;
 
             if (Math.abs(angleError) < Units.degreesToRadians(10) || Math.abs(angleError) > Units.degreesToRadians(350)) {
                 omega += Math.copySign(kS, omega);
@@ -133,7 +128,7 @@ public class AutoShootCommand extends Command {
 
             double distance = robot.getDistance(target);
 
-           SmartDashboard.putNumber("Distance", distance);
+           //SmartDashboard.putNumber("Distance", distance);
 
            if (distance <= 0) {
                return;
@@ -198,15 +193,8 @@ public class AutoShootCommand extends Command {
    @Override
    public void initialize() {
        state = State.ALIGNING;
-       txFilter.reset();
        shootTimer.stop();
        shootTimer.reset();
-
-
-       lockedTagID = -1;
-       lastPipeline = -1;
-       tagLostTimer.reset();
-       tagLostTimer.start();
 
        second = false;
        waitingForPipeline = false;

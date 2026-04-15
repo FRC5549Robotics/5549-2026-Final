@@ -35,7 +35,7 @@ public class RobotStateEstimator extends SubsystemBase {
         if (mt1.tagCount == 0) {
             doRejectUpdate = true;
         }
-        if (mt1.avgTagDist > 2.5) {
+        if (mt1.avgTagDist > 3.5) {
             doRejectUpdate = true;
         }
         if (!doRejectUpdate) {

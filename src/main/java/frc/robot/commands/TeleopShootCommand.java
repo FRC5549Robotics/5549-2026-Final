@@ -75,7 +75,7 @@ public class TeleopShootCommand extends Command {
 
         rotationPID.enableContinuousInput(-Math.PI, Math.PI);
 
-       addRequirements(drivetrain, shooter, hood, belt);
+       addRequirements(drivetrain, shooter, belt);
    }
     
    private final double MaxSpeed = 4.5;
@@ -106,7 +106,7 @@ public class TeleopShootCommand extends Command {
 
             angleError = angleError + Math.PI;
 
-            double kS = 0.36;
+            double kS = 0.45;
 
             if (Math.abs(angleError) < Units.degreesToRadians(10) || Math.abs(angleError) > Units.degreesToRadians(350)) {
                 omega += Math.copySign(kS, omega);
@@ -142,7 +142,7 @@ public class TeleopShootCommand extends Command {
 
             double distance = robot.getDistance(target);
 
-           SmartDashboard.putNumber("Distance", distance);
+           //SmartDashboard.putNumber("Distance", distance);
 
            if (distance <= 0) {
                return;

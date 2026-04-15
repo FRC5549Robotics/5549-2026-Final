@@ -58,14 +58,11 @@ import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Belt;
 import frc.robot.subsystems.Shooter;
 import frc.robot.util.GameState;
-import frc.robot.subsystems.LED;
+// import frc.robot.subsystems.LED;
 import frc.robot.subsystems.Extension;
 import frc.robot.subsystems.Limelight;
 import frc.robot.Vision.LimelightHelpers;
-import frc.robot.subsystems.LEDState;
-
-
-
+// import frc.robot.subsystems.LEDState;
 
 public class RobotContainer {
 
@@ -109,7 +106,7 @@ public class RobotContainer {
     private final Belt m_belt = new Belt();
     private final Shooter m_shooter = new Shooter();
     private final Hood m_hood = new Hood();
-    private final LED m_LED = new LED();
+    // private final LED m_LED = new LED();
     // private final Candle m_leds = new Candle();
     private final GameState gameState = new GameState();
 
@@ -215,7 +212,7 @@ public class RobotContainer {
             autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
                 autoStream -> autoStream.map(auto -> new PathPlannerAuto(auto.getName(), flip))
             );
-            SmartDashboard.putData("AutoChooser", autoChooser);
+            SmartDashboard.putData("Auto Chooser", autoChooser);
         });
 
         autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(
@@ -225,24 +222,24 @@ public class RobotContainer {
         );
         SmartDashboard.putData("Auto Chooser", autoChooser);
 
-        m_LED.setStateSupplier(() -> {
+        // m_LED.setStateSupplier(() -> {
 
-            boolean hubInactive = gameState.isHubInactiveNow();
-            boolean rbHeld = m_driver.getHID().getRightBumper();
-            double tx = getFilteredTX();
-            boolean atSpeed = m_shooter.atSpeed();
-            double seconds = gameState.getSecondsUntilHubToggle();
+        //     boolean hubInactive = gameState.isHubInactiveNow();
+        //     boolean rbHeld = m_driver.getHID().getRightBumper();
+        //     double tx = getFilteredTX();
+        //     boolean atSpeed = m_shooter.atSpeed();
+        //     double seconds = gameState.getSecondsUntilHubToggle();
 
-            m_LED.setCountdown(seconds);
+        //     m_LED.setCountdown(seconds);
 
-            //SmartDashboard.putBoolean("Hub Inactive", hubInactive);
-            //SmartDashboard.putBoolean("LB Held", rbHeld);
-            //SmartDashboard.putNumber("Limelight TX", tx);
-            //SmartDashboard.putBoolean("Shooter At Speed", atSpeed);
+        //     //SmartDashboard.putBoolean("Hub Inactive", hubInactive);
+        //     //SmartDashboard.putBoolean("LB Held", rbHeld);
+        //     //SmartDashboard.putNumber("Limelight TX", tx);
+        //     //SmartDashboard.putBoolean("Shooter At Speed", atSpeed);
 
-            return computeLEDState(hubInactive, rbHeld, tx, atSpeed);
+        //     return computeLEDState(hubInactive, rbHeld, tx, atSpeed);
         
-        });
+        // });
 
         configureBindings();
     }
@@ -326,8 +323,11 @@ public class RobotContainer {
         m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
             .whileTrue(
                 new ParallelCommandGroup(
-                    new RunCommand(() -> m_shooter.shoot(2000), m_shooter),
-                    new RunCommand(m_belt::intake, m_belt)
+                    new RunCommand(() -> m_shooter.shoot(2300), m_shooter), //2300
+                    new SequentialCommandGroup(
+                        new WaitCommand(0.2),
+                        new RunCommand(m_belt::intake, m_belt)
+                    )
                 )
             )
             .onFalse(
@@ -335,6 +335,11 @@ public class RobotContainer {
                     new InstantCommand(m_shooter::off, m_shooter),
                     new InstantCommand(m_belt::off, m_belt)
                 )
+            );
+
+        m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
+            .onTrue(
+                new InstantCommand(() -> m_hood.setAngle(69), m_hood)
             );
 
         m_operator.axisGreaterThan(2, Constants.TRIGGER_DEADBAND)
@@ -371,26 +376,26 @@ public class RobotContainer {
     }
 
 
-    public LEDState computeLEDState(
-        boolean hubInactive,
-        boolean rbHeld,
-        double tx,
-        boolean atSpeed) {
+    // public LEDState computeLEDState(
+    //     boolean hubInactive,
+    //     boolean rbHeld,
+    //     double tx,
+    //     boolean atSpeed) {
 
-        if (hubInactive) {
-            return LEDState.RED;
-        }
+    //     if (hubInactive) {
+    //         return LEDState.RED;
+    //     }
 
-        if (!rbHeld) {
-            return LEDState.PURPLE;
-        }
+    //     if (!rbHeld) {
+    //         return LEDState.PURPLE;
+    //     }
 
-        //if (!Double.isFinite(tx) || Math.abs(tx) > 5) {
-            //return LEDState.PURPLE;
-        //}
+    //     //if (!Double.isFinite(tx) || Math.abs(tx) > 5) {
+    //         //return LEDState.PURPLE;
+    //     //}
 
-         return LEDState.GREEN;
-    }
+    //      return LEDState.GREEN;
+    // }
 
 
     public Command getAutonomousCommand() {

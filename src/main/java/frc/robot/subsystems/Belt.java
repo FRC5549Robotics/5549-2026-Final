@@ -35,7 +35,7 @@ public class Belt extends SubsystemBase{
         beltConfigs = new TalonFXConfiguration();
         beltConfigurator = belt_right.getConfigurator();
 
-        beltConfigs.CurrentLimits.StatorCurrentLimit = 40;
+        beltConfigs.CurrentLimits.StatorCurrentLimit = 100;
         beltConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
         beltConfigs.CurrentLimits.SupplyCurrentLimit = 30;
         beltConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -45,11 +45,11 @@ public class Belt extends SubsystemBase{
         beltConfigs.Voltage.PeakForwardVoltage = 12.0;
         beltConfigs.Voltage.PeakReverseVoltage = -12.0;
 
-        beltConfigs.Slot0.kP = 0.5;
+        beltConfigs.Slot0.kP = 0.0;
         beltConfigs.Slot0.kI = 0.0;
         beltConfigs.Slot0.kD = 0.0;
-        beltConfigs.Slot0.kV = 0.121;
-        beltConfigs.Slot0.kS = 0.4;
+        beltConfigs.Slot0.kV = 0.16;
+        beltConfigs.Slot0.kS = 0.5;
 
         beltConfigs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.00; //take 0.08 seconds to reach demanded output
 

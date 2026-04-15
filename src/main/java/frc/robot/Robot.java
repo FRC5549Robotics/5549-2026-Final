@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import org.littletonrobotics.junction.LoggedRobot;
+
 import com.ctre.phoenix6.HootAutoReplay;
 
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -15,13 +17,14 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.commands.ZeroExtension;
 import frc.robot.commands.ZeroHood;
 import frc.robot.shooter.ShooterLookup;
 import frc.robot.util.GameState;
 import frc.robot.util.PowerMonitor;
 
-public class Robot extends TimedRobot {
+public class Robot extends LoggedRobot {
     private Command m_autonomousCommand;
 
     private final RobotContainer m_robotContainer;
@@ -60,6 +63,8 @@ public class Robot extends TimedRobot {
         channels[1] = "drive_front_left"; // port 1 = drive front left motor
 
         powerMonitor = new PowerMonitor(channels);
+
+        RobotController.setBrownoutVoltage(6.5);
     }
 
     @Override
