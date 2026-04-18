@@ -229,9 +229,11 @@ public final class Constants {
     //Passing
     public static final double xCoordOfPass = distanceToFrontOfHub / 2.0;
 
+    //From DS POV
     public static final double yCoordOfLeftPass = fieldWidth * 3.0 / 4.0;
     public static final double yCoordOfRightPass = fieldWidth * 1.0 / 4.0;
 
-    public static final AllianceFlipped<Translation2d> LeftPass = AllianceFlippedUtil.fromBlue(new Translation2d(xCoordOfPass, yCoordOfRightPass));
+    public static final AllianceFlipped<Translation2d> LeftPass = AllianceFlippedUtil.fromBlue(new Translation2d(xCoordOfPass, yCoordOfLeftPass));
+    public static final AllianceFlipped<Translation2d> RightPass = AllianceFlippedUtil.fromBlue(new Translation2d(xCoordOfPass, yCoordOfRightPass));
 
 } 

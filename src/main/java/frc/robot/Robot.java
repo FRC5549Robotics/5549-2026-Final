@@ -56,6 +56,14 @@ public class Robot extends LoggedRobot {
             Preferences.initDouble("Shooter_Time_" + i, 0.0);
         }
 
+        for (int i = 1; i <= 3; i++) {
+            // Use initDouble to set defaults only if they don't exist
+            Preferences.initDouble("Passing_Dist_" + i, 0.0);
+            Preferences.initDouble("Passing_Angle_" + i, 0.0);
+            Preferences.initDouble("Passing_RPM_" + i, 0.0);
+            Preferences.initDouble("Passing_Time_" + i, 0.0);
+        }
+
         NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(200);
 
         DataLogManager.start();
