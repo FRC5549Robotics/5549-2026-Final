@@ -83,10 +83,16 @@ public class AutoShootCommand extends Command {
         //SmartDashboard.putString("state", state.toString());
 
         if (state == State.ALIGNING) {
+            shooter.shoot(1500); //spin up to 1500
             Translation2d robot = drivetrain.getState().Pose.getTranslation();
             Translation2d target = Constants.HUB.get();
 
             Rotation2d direction = target.minus(robot).getAngle();
+            double distance = robot.getDistance(target);
+
+            ShooterState shot = ShooterLookup.get(distance);
+            hood.setAngle(shot.hoodAngleDeg); //align hood while aligning drivetrain
+            shooter.shoot(shot.flywheelRPM); //spin up while aligning
 
             double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
             double targetAngle = direction.getRadians();
@@ -115,7 +121,7 @@ public class AutoShootCommand extends Command {
             //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
             //SmartDashboard.putNumber("OmegaCmd", omega);
 
-            if (Math.abs(angleError) < Units.degreesToRadians(1) || Math.abs(angleError) > Units.degreesToRadians(359)) {
+            if (Math.abs(angleError) < Units.degreesToRadians(0.25) || Math.abs(angleError) > Units.degreesToRadians(359.75)) {
                 state = State.SPINNING_UP;
             }
         }

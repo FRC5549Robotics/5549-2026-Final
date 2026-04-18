@@ -24,6 +24,7 @@ import frc.robot.commands.AutoShootCommand;
 import frc.robot.commands.TeleopShootCommand;
 import frc.robot.commands.ZeroExtensionTeleop;
 import frc.robot.commands.ZeroHood;
+import frc.robot.commands.ZeroExtension;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -159,11 +160,12 @@ public class RobotContainer {
                 m_pivot
             ).withTimeout(5) //how long to run it
         );
-        NamedCommands.registerCommand("PivotDownAndIntakeFull", new RunCommand(
+        NamedCommands.registerCommand("PivotDownAndIntake7s", new RunCommand(
                 () -> m_pivot.setPivotDownFast(), //what to run while active
                 m_pivot
-            ).withTimeout(10) //how long to run it
+            ).withTimeout(7) //how long to run it
         );
+
         NamedCommands.registerCommand("PivotUp", new InstantCommand(m_pivot::setPivotUp));
         NamedCommands.registerCommand("shoot", new InstantCommand(() -> m_shooter.shoot(1800), m_shooter));
         NamedCommands.registerCommand("ShootOff", new InstantCommand(m_shooter::off));
@@ -172,7 +174,7 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "AutoShootCommand",
             new SequentialCommandGroup(
-                new ZeroHood(m_hood),
+                //new ZeroHood(m_hood),
                 new ParallelCommandGroup(new InstantCommand(m_pivot:: IntakeOn), new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
                 .withTimeout(15))
                 
@@ -181,7 +183,7 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "QuickAutoShootCommand",
             new SequentialCommandGroup(
-                new ZeroHood(m_hood),
+                //new ZeroHood(m_hood),
                 new ParallelCommandGroup(new InstantCommand(m_pivot:: IntakeOn), new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
                 .withTimeout(7))
                 
@@ -190,7 +192,7 @@ public class RobotContainer {
         NamedCommands.registerCommand(
             "4sQuickAutoShootCommand",
             new SequentialCommandGroup(
-                new ZeroHood(m_hood),
+                //new ZeroHood(m_hood),
                 new ParallelCommandGroup(new InstantCommand(m_pivot:: IntakeOn), new AutoShootCommand(drivetrain, m_limelight, m_shooter, m_hood, m_belt, m_pivot)
                 .withTimeout(4))
                 
@@ -199,6 +201,10 @@ public class RobotContainer {
         NamedCommands.registerCommand("RetractHopper", new InstantCommand(m_extension::retract));
 
         NamedCommands.registerCommand("ExtendHopper", new InstantCommand(m_extension::extend));
+
+        NamedCommands.registerCommand("ZeroHood", new InstantCommand(() -> new ZeroHood(m_hood).schedule()));
+
+        NamedCommands.registerCommand("ZeroExtension", new InstantCommand(() -> new ZeroExtension(m_extension).schedule()));
 
         //autoChooser = AutoBuilder.buildAutoChooser();
         //SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -369,6 +375,7 @@ public class RobotContainer {
             ));
 
         m_operator.button(8).onTrue(new ZeroExtensionTeleop(m_extension));
+        m_operator.button(7).onTrue(new ZeroHood(m_hood));
     }
 
     public GameState getGameState() {

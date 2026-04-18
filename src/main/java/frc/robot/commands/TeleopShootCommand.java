@@ -96,6 +96,11 @@ public class TeleopShootCommand extends Command {
             Translation2d target = Constants.HUB.get();
 
             Rotation2d direction = target.minus(robot).getAngle();
+            double distance = robot.getDistance(target);
+
+            ShooterState shot = ShooterLookup.get(distance);
+            hood.setAngle(shot.hoodAngleDeg); //align hood while aligning drivetrain
+            shooter.shoot(shot.flywheelRPM); //spin up while aligning
 
             double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
             double targetAngle = direction.getRadians();
@@ -124,7 +129,7 @@ public class TeleopShootCommand extends Command {
             //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
             //SmartDashboard.putNumber("OmegaCmd", omega);
 
-            if (Math.abs(angleError) < Units.degreesToRadians(1) || Math.abs(angleError) > Units.degreesToRadians(359)) {
+            if (Math.abs(angleError) < Units.degreesToRadians(0.25) || Math.abs(angleError) > Units.degreesToRadians(359.75)) {
                 state = State.SPINNING_UP;
             }
         }
@@ -142,7 +147,7 @@ public class TeleopShootCommand extends Command {
 
             double distance = robot.getDistance(target);
 
-           //SmartDashboard.putNumber("Distance", distance);
+           SmartDashboard.putNumber("Distance", distance);
 
            if (distance <= 0) {
                return;
@@ -159,7 +164,7 @@ public class TeleopShootCommand extends Command {
                    shootTimer.start();
                }
           
-               if (shootTimer.hasElapsed(0.2)) {
+               if (shootTimer.hasElapsed(0.1)) {
                    state = State.SHOOTING;
                }
           

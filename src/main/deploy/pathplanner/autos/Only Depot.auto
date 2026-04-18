@@ -11,13 +11,26 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Full Depot"
+                  "pathName": "Full Depot Center Hub"
                 }
               },
               {
-                "type": "named",
+                "type": "sequential",
                 "data": {
-                  "name": "PivotDownAndIntake"
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 0.2
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "PivotDownAndIntake"
+                      }
+                    }
+                  ]
                 }
               }
             ]

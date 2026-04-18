@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.commands.ZeroExtension;
+import frc.robot.commands.ZeroExtensionTeleop;
 import frc.robot.commands.ZeroHood;
 import frc.robot.shooter.ShooterLookup;
 import frc.robot.util.GameState;
@@ -91,7 +92,7 @@ public class Robot extends LoggedRobot {
     public void autonomousInit() {
         new ZeroHood(m_robotContainer.getHood()).schedule();
 
-        new ZeroExtension(m_robotContainer.getExtension()).schedule();
+        new ZeroExtensionTeleop(m_robotContainer.getExtension()).schedule();
 
         NetworkTableInstance.getDefault().getTable("limelight").getEntry("throttle_set").setNumber(0);
 
@@ -112,7 +113,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
-        new ZeroHood(m_robotContainer.getHood()).schedule();
+        //new ZeroHood(m_robotContainer.getHood()).schedule();
         
         //new ZeroExtension(m_robotContainer.getExtension()).schedule();
 

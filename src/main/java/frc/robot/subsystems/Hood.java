@@ -26,7 +26,7 @@ public class Hood extends SubsystemBase{
     private final PIDController hoodPID = new PIDController(0.08, 0.0, 0.004); // kP, kI, kD
     private static final double kS = 0.05;
 
-    private double hoodSetpoint = 72.0;
+    private double hoodSetpoint = 69.0;
     {
         hoodPID.setTolerance(0.5);
     }
@@ -112,7 +112,7 @@ public class Hood extends SubsystemBase{
         //SmartDashboard.putNumber("Hood Position", currentPos);
         //SmartDashboard.putBoolean("Hood PID enabled", PIDEnabled);
 
-        if (!PIDEnabled || getCurrentCommand() != null) return;
+        if (!PIDEnabled) return;
 
         double output = hoodPID.calculate(currentPos, hoodSetpoint);
 
