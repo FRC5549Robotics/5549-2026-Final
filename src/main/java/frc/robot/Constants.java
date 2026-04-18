@@ -163,14 +163,6 @@ public final class Constants {
     REPLAY
   }
     
-
-  //Shintake Constants
-    // public static final int INTAKE_MOTOR_LEFT = 33;
-    // public static final int INTAKE_MOTOR_RIGHT = 40;
-    // public static final int SHOOTER_INTAKE_BUTTON = 6;
-    // public static final double INTAKE_OUTTAKE_SPEED = 1;
-    // public static final double OUTTAKE_L1_SPEED = 0.4;
-    // public static final int SHINTAKE_BUTTON = 0;
     public static final int INTAKE_TRIGGER = 3;
     public static final int OUTTAKE_TRIGGER = 2;//RETURN TO OLD SETTING LATER
 
@@ -232,4 +224,14 @@ public final class Constants {
 
     //Expanding hopper
     public static final int EXTENSION_MOTOR_ID = 21;
+
+
+    //Passing
+    public static final double xCoordOfPass = distanceToFrontOfHub / 2.0;
+
+    public static final double yCoordOfLeftPass = fieldWidth * 3.0 / 4.0;
+    public static final double yCoordOfRightPass = fieldWidth * 1.0 / 4.0;
+
+    public static final AllianceFlipped<Translation2d> LeftPass = AllianceFlippedUtil.fromBlue(new Translation2d(xCoordOfPass, yCoordOfRightPass));
+
 } 
