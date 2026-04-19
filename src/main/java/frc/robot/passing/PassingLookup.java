@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.Preferences;
 
 public class PassingLookup {
 
-    // distance (meters) -> PassingState
+    // distance (meters) -> ShooterState
     private static final TreeMap<Double, ShooterState> table = new TreeMap<>();
 
     public static void updateTableFromPreferences() {

@@ -164,7 +164,7 @@ public class TeleopShootCommand extends Command {
                    shootTimer.start();
                }
           
-               if (shootTimer.hasElapsed(0.1)) {
+               if (shootTimer.hasElapsed(0.05)) {
                    state = State.SHOOTING;
                }
           
@@ -184,6 +184,7 @@ public class TeleopShootCommand extends Command {
 
            if (!shooter.atSpeed()) {
                belt.off();
+               return;
            }
 
 

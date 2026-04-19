@@ -152,7 +152,7 @@ public class AutoShootCommand extends Command {
                    shootTimer.start();
                }
           
-               if (shootTimer.hasElapsed(0.2)) {
+               if (shootTimer.hasElapsed(0.05)) {
                    state = State.SHOOTING;
                }
           
@@ -165,6 +165,7 @@ public class AutoShootCommand extends Command {
         if (state == State.SHOOTING) {
            if (!shooter.atSpeed()) {
                belt.off();
+               return;
            }
 
            belt.intake();

@@ -24,7 +24,7 @@ import frc.robot.commands.AutoShootCommand;
 import frc.robot.commands.TeleopShootCommand;
 import frc.robot.commands.ZeroExtensionTeleop;
 import frc.robot.commands.ZeroHood;
-import frc.robot.commands.ZeroExtension;
+import frc.robot.commands.ZeroExtensionInstant;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -204,7 +204,7 @@ public class RobotContainer {
 
         NamedCommands.registerCommand("ZeroHood", new InstantCommand(() -> new ZeroHood(m_hood).schedule()));
 
-        NamedCommands.registerCommand("ZeroExtension", new InstantCommand(() -> new ZeroExtension(m_extension).schedule()));
+        NamedCommands.registerCommand("ZeroExtension", new InstantCommand(() -> new ZeroExtensionInstant(m_extension).schedule()));
 
         //autoChooser = AutoBuilder.buildAutoChooser();
         //SmartDashboard.putData("Auto Chooser", autoChooser);
