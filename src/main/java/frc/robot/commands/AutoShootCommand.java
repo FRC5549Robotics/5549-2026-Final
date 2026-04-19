@@ -189,7 +189,7 @@ public class AutoShootCommand extends Command {
         shooter.off();
         belt.off();
         intake.off();
-        drivetrain.stopDriving();
+        //drivetrain.stopDriving();
     }
 
     @Override

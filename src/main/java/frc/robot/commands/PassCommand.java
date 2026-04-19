@@ -44,19 +44,12 @@ public class PassCommand extends Command {
 
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-    private enum State {
-        AIMING_AND_SPINNING,
-        PASSING
-    }
-
-    private State state = State.AIMING_AND_SPINNING;
-
     private final Timer shootTimer = new Timer();
     private final Timer alignTimer = new Timer();
 
     private final PIDController rotationPID = new PIDController(5, 0.0, 0.005);
 
-    public PassCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
+    public PassCommand(CommandSwerveDrivetrain drivetrain, Shooter shooter, Hood hood, Belt belt) {
        this.drivetrain = drivetrain;
        this.shooter = shooter;
        this.hood = hood;
@@ -79,104 +72,54 @@ public class PassCommand extends Command {
    @Override
    public void execute() {
 
-        //System.out.println(state);
-        if (state == State.AIMING_AND_SPINNING) {
-            Translation2d robot = drivetrain.getState().Pose.getTranslation();
-            Translation2d targetLeft = Constants.LeftPass.get();
-            Translation2d targetRight = Constants.RightPass.get();
+        Translation2d robot = drivetrain.getState().Pose.getTranslation();
+        Translation2d targetLeft = Constants.LeftPass.get();
+        Translation2d targetRight = Constants.RightPass.get();
 
-            Rotation2d direction;
-            double distance;
+        Translation2d target = robot.getDistance(targetLeft) < robot.getDistance(targetRight) ? targetLeft : targetRight;
 
-            if (robot.getDistance(targetLeft) < robot.getDistance(targetRight)) {
-                direction = targetLeft.minus(robot).getAngle();
-                distance = robot.getDistance(targetLeft);
-            } else {
-                direction = targetRight.minus(robot).getAngle();
-                distance = robot.getDistance(targetRight);
-            }
+        Rotation2d direction = target.minus(robot).getAngle();
+        double distance = robot.getDistance(target);
 
-            ShooterState shot = PassingLookup.get(distance);
-            hood.setAngle(shot.hoodAngleDeg); //align hood while aligning drivetrain
-            shooter.shoot(shot.flywheelRPM); //spin up while aligning
+        ShooterState shot = PassingLookup.get(distance);
+        hood.setAngle(shot.hoodAngleDeg); //align hood while aligning drivetrain
+        shooter.shoot(shot.flywheelRPM); //spin up while aligning
 
-            double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
-            double targetAngle = direction.getRadians();
+        double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
+        double targetAngle = direction.getRadians();
 
-            double omega = rotationPID.calculate(currentAngle + Math.PI, targetAngle);
+        double omega = rotationPID.calculate(currentAngle + Math.PI, targetAngle);
 
-            double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
+        double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
 
-            angleError = angleError + Math.PI;
+        angleError = angleError + Math.PI;
 
-            double kS = 0.45;
+        double kS = 0.45;
 
-            if (Math.abs(angleError) < Units.degreesToRadians(10) || Math.abs(angleError) > Units.degreesToRadians(350)) {
-                omega += Math.copySign(kS, omega);
-            }
-
-            omega = MathUtil.clamp(omega, -MaxAngularRate, MaxAngularRate);
-
-            drivetrain.setControl(
-                drive
-                    .withVelocityX(MaxSpeed * -joystick.getLeftY())
-                    .withVelocityY(MaxSpeed * -joystick.getLeftX())
-                    .withRotationalRate(omega)
-            );
-
-            //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
-            //SmartDashboard.putNumber("OmegaCmd", omega);
-
-            if ((Math.abs(angleError) < Units.degreesToRadians(0.25) || Math.abs(angleError) > Units.degreesToRadians(359.75)) && shooter.atSpeed()) {
-                 if (!shootTimer.isRunning()) {
-                   shootTimer.reset();
-                   shootTimer.start();
-               }
-          
-               if (shootTimer.hasElapsed(0.05)) { //wait a short time to ensure rpm is steady
-                   state = State.PASSING;
-               }
-           } else {
-               shootTimer.stop();
-               shootTimer.reset();
-           }
-           return;
+        if (Math.abs(angleError) < Units.degreesToRadians(10) || Math.abs(angleError) > Units.degreesToRadians(350)) {
+            omega += Math.copySign(kS, omega);
         }
 
-       if (state == State.PASSING) {
+        omega = MathUtil.clamp(omega, -MaxAngularRate, MaxAngularRate);
 
-           if (!shooter.atSpeed()) {
-               belt.off();
-               return;
-           }
+        drivetrain.setControl(
+            drive
+                .withVelocityX(MaxSpeed * -joystick.getLeftY())
+                .withVelocityY(MaxSpeed * -joystick.getLeftX())
+                .withRotationalRate(omega)
+        );
 
-           
-            Translation2d robot = drivetrain.getState().Pose.getTranslation();
-            Translation2d targetLeft = Constants.LeftPass.get();
-            Translation2d targetRight = Constants.RightPass.get();
+        //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
+        //SmartDashboard.putNumber("OmegaCmd", omega);
 
-            Rotation2d direction;
+        boolean aimed = Math.abs(angleError) < Units.degreesToRadians(1);
+        boolean spunUp = shooter.atSpeed();
 
-            if (robot.getDistance(targetLeft) < robot.getDistance(targetRight)) {
-                direction = targetLeft.minus(robot).getAngle();
-            } else {
-                direction = targetRight.minus(robot).getAngle();
-            }
-
-            double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
-            double targetAngle = direction.getRadians();
-
-            double angleError = MathUtil.angleModulus(targetAngle - currentAngle);
-
-            if (Math.abs(angleError) > Units.degreesToRadians(0.25) && Math.abs(angleError) < Units.degreesToRadians(359.75)) {
-                state = State.AIMING_AND_SPINNING;
-                return;
-            }
-
+        if (aimed && spunUp) {
             belt.intake();
-
-            return;
-       }
+        } else {
+            belt.off();
+        }
    }
 
 
@@ -202,13 +145,6 @@ public class PassCommand extends Command {
 
    @Override
    public void initialize() {
-       state = State.AIMING_AND_SPINNING;
-       shootTimer.stop();
-       shootTimer.reset();
-
-        alignTimer.stop();
-        alignTimer.reset();
-
         rotationPID.reset();
    }
 }
