@@ -9,6 +9,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -44,9 +45,6 @@ public class PassCommand extends Command {
 
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-    private final Timer shootTimer = new Timer();
-    private final Timer alignTimer = new Timer();
-
     private final PIDController rotationPID = new PIDController(5, 0.0, 0.005);
 
     public PassCommand(CommandSwerveDrivetrain drivetrain, Shooter shooter, Hood hood, Belt belt) {
@@ -76,14 +74,28 @@ public class PassCommand extends Command {
         Translation2d targetLeft = Constants.LeftPass.get();
         Translation2d targetRight = Constants.RightPass.get();
 
-        Translation2d target = robot.getDistance(targetLeft) < robot.getDistance(targetRight) ? targetLeft : targetRight;
+        Translation2d rawTarget = robot.getDistance(targetLeft) < robot.getDistance(targetRight) ? targetLeft : targetRight;
+        
+        double rawDistance = robot.getDistance(rawTarget);
+        ShooterState shot = PassingLookup.get(rawDistance);
 
-        Rotation2d direction = target.minus(robot).getAngle();
-        double distance = robot.getDistance(target);
+        ChassisSpeeds robotRelative = drivetrain.getChassisSpeeds();
+        ChassisSpeeds fieldRelative = ChassisSpeeds.fromFieldRelativeSpeeds(
+            robotRelative.vxMetersPerSecond, 
+            robotRelative.vyMetersPerSecond, 
+            robotRelative.omegaRadiansPerSecond,
+            drivetrain.getState().Pose.getRotation()
+        );
 
-        ShooterState shot = PassingLookup.get(distance);
-        hood.setAngle(shot.hoodAngleDeg); //align hood while aligning drivetrain
-        shooter.shoot(shot.flywheelRPM); //spin up while aligning
+        Translation2d velocityOffset = new Translation2d(fieldRelative.vxMetersPerSecond * shot.timeOfFlight, fieldRelative.vyMetersPerSecond * shot.timeOfFlight);
+
+        Translation2d compensatedTarget = rawTarget.plus(velocityOffset);
+        double compensatedDistance = robot.getDistance(compensatedTarget);
+        Rotation2d direction = compensatedTarget.minus(robot).getAngle();
+        ShooterState shotCompensated = PassingLookup.get(compensatedDistance);
+
+        hood.setAngle(shotCompensated.hoodAngleDeg); //align hood while aligning drivetrain
+        shooter.shoot(shotCompensated.flywheelRPM); //spin up while aligning
 
         double currentAngle = drivetrain.getState().Pose.getRotation().getRadians();
         double targetAngle = direction.getRadians();
@@ -112,7 +124,7 @@ public class PassCommand extends Command {
         //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
         //SmartDashboard.putNumber("OmegaCmd", omega);
 
-        boolean aimed = Math.abs(angleError) < Units.degreesToRadians(1);
+        boolean aimed = Math.abs(angleError) < Units.degreesToRadians(5);
         boolean spunUp = shooter.atSpeed();
 
         if (aimed && spunUp) {
@@ -127,13 +139,6 @@ public class PassCommand extends Command {
    public void end(boolean interupted) {
        shooter.off();
        belt.off();
-       //if (allowAutoPivot.getAsBoolean()) {
-           //intake.shooting();
-       //
-      
-  
-   //}
-       drivetrain.stopDriving();
    }
 
 
