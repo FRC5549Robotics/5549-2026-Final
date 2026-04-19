@@ -4,12 +4,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Extension;
 import edu.wpi.first.wpilibj.Timer;
 
-public class ZeroExtension extends Command {
+public class ZeroExtensionInstant extends Command {
     private final Timer timer = new Timer();
 
     private final Extension extension;
 
-    public ZeroExtension(Extension extension) {
+    public ZeroExtensionInstant(Extension extension) {
         this.extension = extension;
         addRequirements(extension);
     }
