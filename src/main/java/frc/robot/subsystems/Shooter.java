@@ -110,6 +110,16 @@ public class Shooter extends SubsystemBase {
     return Math.abs(currentRPMFiltered - targetRPM) < 50; //Is flywheel rpm within tolerance?
   }
 
+    public boolean atSpeedPassing() {
+    double currentRPM = left.getVelocity().getValueAsDouble() * 60;
+    double currentRPMFiltered = rpmFilter.calculate(currentRPM);
+    if (targetRPM == 0.0) {
+      return false;
+    }
+    //System.out.println(Math.abs(currentRPMFiltered - targetRPM));
+    return Math.abs(currentRPMFiltered - targetRPM) < 200; //Is flywheel rpm within tolerance?
+  }
+
   @Override
   public void periodic() {
     double leftRPS = left.getVelocity().getValueAsDouble();     // motor rotations/sec

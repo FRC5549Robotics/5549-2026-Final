@@ -344,7 +344,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
-    private double lastVisionTime = 0;
+    public void setPassTarget(Translation2d target) {
+        m_field.getObject("Pass Target").setPose(new Pose2d(target, new Rotation2d()));
+    }
 
     @Override
     public void periodic() {

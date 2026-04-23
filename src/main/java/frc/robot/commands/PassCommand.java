@@ -45,7 +45,9 @@ public class PassCommand extends Command {
 
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-    private final PIDController rotationPID = new PIDController(5, 0.0, 0.005);
+    private final PIDController rotationPID = new PIDController(2.65, 0.0, 0.0);
+
+    private final Timer shootTimer = new Timer();
 
     public PassCommand(CommandSwerveDrivetrain drivetrain, Shooter shooter, Hood hood, Belt belt) {
        this.drivetrain = drivetrain;
@@ -70,6 +72,8 @@ public class PassCommand extends Command {
    @Override
    public void execute() {
 
+        shootTimer.start();
+
         Translation2d robot = drivetrain.getState().Pose.getTranslation();
         Translation2d targetLeft = Constants.LeftPass.get();
         Translation2d targetRight = Constants.RightPass.get();
@@ -77,10 +81,12 @@ public class PassCommand extends Command {
         Translation2d rawTarget = robot.getDistance(targetLeft) < robot.getDistance(targetRight) ? targetLeft : targetRight;
         
         double rawDistance = robot.getDistance(rawTarget);
+        SmartDashboard.putNumber("pass distance", rawDistance);
+
         ShooterState shot = PassingLookup.get(rawDistance);
 
         ChassisSpeeds robotRelative = drivetrain.getChassisSpeeds();
-        ChassisSpeeds fieldRelative = ChassisSpeeds.fromFieldRelativeSpeeds(
+        ChassisSpeeds fieldRelative = ChassisSpeeds.fromRobotRelativeSpeeds(
             robotRelative.vxMetersPerSecond, 
             robotRelative.vyMetersPerSecond, 
             robotRelative.omegaRadiansPerSecond,
@@ -88,8 +94,11 @@ public class PassCommand extends Command {
         );
 
         Translation2d velocityOffset = new Translation2d(fieldRelative.vxMetersPerSecond * shot.timeOfFlight, fieldRelative.vyMetersPerSecond * shot.timeOfFlight);
+        System.out.println(velocityOffset);
 
-        Translation2d compensatedTarget = rawTarget.plus(velocityOffset);
+        Translation2d compensatedTarget = rawTarget.minus(velocityOffset);
+        drivetrain.setPassTarget(compensatedTarget);
+
         double compensatedDistance = robot.getDistance(compensatedTarget);
         Rotation2d direction = compensatedTarget.minus(robot).getAngle();
         ShooterState shotCompensated = PassingLookup.get(compensatedDistance);
@@ -124,10 +133,10 @@ public class PassCommand extends Command {
         //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
         //SmartDashboard.putNumber("OmegaCmd", omega);
 
-        boolean aimed = Math.abs(angleError) < Units.degreesToRadians(5);
-        boolean spunUp = shooter.atSpeed();
+        boolean aimed = Math.abs(angleError) < Units.degreesToRadians(15);
+        boolean spunUp = shootTimer.hasElapsed(0.2);
 
-        if (aimed && spunUp) {
+        if (spunUp && aimed) {
             belt.intake();
         } else {
             belt.off();
@@ -151,5 +160,8 @@ public class PassCommand extends Command {
    @Override
    public void initialize() {
         rotationPID.reset();
+
+        shootTimer.stop();
+        shootTimer.reset();
    }
 }

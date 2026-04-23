@@ -22,6 +22,7 @@ import frc.robot.commands.AimAndSpinUpCommand;
 import frc.robot.commands.AlignLimelight;
 import frc.robot.commands.AutoShootCommand;
 import frc.robot.commands.TeleopShootCommand;
+import frc.robot.commands.PassCommand;
 import frc.robot.commands.ZeroExtensionTeleop;
 import frc.robot.commands.ZeroHood;
 import frc.robot.commands.ZeroExtensionInstant;
@@ -326,7 +327,7 @@ public class RobotContainer {
         //Belt unjam
         m_operator.leftBumper().onTrue(new InstantCommand(m_belt:: jammed)).onFalse(new InstantCommand(m_belt:: off));
         //Operator shoots balls
-        m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
+        /* m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
             .whileTrue(
                 new ParallelCommandGroup(
                     new RunCommand(() -> m_shooter.shoot(2300), m_shooter), //2300
@@ -341,12 +342,17 @@ public class RobotContainer {
                     new InstantCommand(m_shooter::off, m_shooter),
                     new InstantCommand(m_belt::off, m_belt)
                 )
-            );
+            ); */
 
         m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
+            .whileTrue(
+                new PassCommand(drivetrain, m_shooter, m_hood, m_belt)
+            );
+
+        /* m_operator.axisGreaterThan(3, Constants.TRIGGER_DEADBAND)
             .onTrue(
                 new InstantCommand(() -> m_hood.setAngle(69), m_hood)
-            );
+            ); */
 
         m_operator.axisGreaterThan(2, Constants.TRIGGER_DEADBAND)
             .whileTrue(new RunCommand(m_pivot::IntakeReverse, m_pivot))
@@ -360,12 +366,12 @@ public class RobotContainer {
         
         m_operator.button(4).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
-        //setpoint for passing
-        //m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(69), m_hood));
-
-        //m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(2000), m_shooter));
-        
-        //m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
+        //setpoint for testing
+        m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(52), m_hood));
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1000), m_shooter));
+        m_operator.button(1).whileTrue(new RunCommand(() -> m_belt.intake(), m_belt));
+        m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
+        m_operator.button(1).onFalse(new InstantCommand(() -> m_belt.off(), m_belt));
 
         m_operator.pov(0).or(m_operator.pov(45)).or(m_operator.pov(315)).onTrue(new InstantCommand(m_extension::extend, m_extension));
         m_operator.pov(180).or(m_operator.pov(135)).or(m_operator.pov(225))

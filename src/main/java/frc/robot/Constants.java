@@ -148,7 +148,7 @@ public final class Constants {
 
   public static final double AIM_kP = 0.015; //kP for autoAim
 
-  public static final double DRIVER_DEADBAND = 0.1; 
+  public static final double DRIVER_DEADBAND = 0.01; 
   public static final double TRIGGER_DEADBAND = 0.7; 
 
 
