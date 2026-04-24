@@ -35,6 +35,8 @@ import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+
 
 public class PassCommand extends Command {
     private final CommandSwerveDrivetrain drivetrain;
@@ -93,7 +95,7 @@ public class PassCommand extends Command {
         );
 
         Translation2d velocityOffset = new Translation2d(fieldRelative.vxMetersPerSecond * shot.timeOfFlight, fieldRelative.vyMetersPerSecond * shot.timeOfFlight);
-        System.out.println(velocityOffset);
+        //System.out.println(velocityOffset);
 
         Translation2d compensatedTarget = rawTarget.minus(velocityOffset);
         drivetrain.setPassTarget(compensatedTarget);

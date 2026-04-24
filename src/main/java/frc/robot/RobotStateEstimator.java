@@ -23,7 +23,6 @@ public class RobotStateEstimator extends SubsystemBase {
             return;
         }
         visionCounter = 0;
-
         doRejectUpdate = false;
         //LimelightHelpers.SetRobotOrientation("limelight", m_SwerveDrivetrain.getPigeon2().getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
         LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
@@ -34,6 +33,7 @@ public class RobotStateEstimator extends SubsystemBase {
             doRejectUpdate = true;
         } 
         if (mt1.tagCount == 0) {
+            //System.out.println("tag count = 0");
             doRejectUpdate = true;
         }
         SmartDashboard.putNumber("avgTagDist", mt1.avgTagDist);
@@ -41,6 +41,7 @@ public class RobotStateEstimator extends SubsystemBase {
             doRejectUpdate = true;
         }
         if (!doRejectUpdate) {
+            //System.out.println("pulling vision");
             m_SwerveDrivetrain.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);
         }
     }

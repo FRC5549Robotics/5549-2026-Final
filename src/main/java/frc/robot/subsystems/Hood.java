@@ -32,7 +32,7 @@ public class Hood extends SubsystemBase{
     }
 
     //private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
-    private final DutyCycleOut homingRequest = new DutyCycleOut(-0.1);
+    private final DutyCycleOut homingRequest = new DutyCycleOut(-0.2);
 
     TalonFX HoodMotor;
     TalonFXConfiguration HoodMotorConfig;
@@ -41,9 +41,9 @@ public class Hood extends SubsystemBase{
         HoodMotor = new TalonFX(Constants.HOOD_MOTOR_ID, "lil clanker");
         HoodMotorConfig = new TalonFXConfiguration();
 
-        HoodMotorConfig.CurrentLimits.StatorCurrentLimit = 20; //used to be 60
+        HoodMotorConfig.CurrentLimits.StatorCurrentLimit = 40; //used to be 60
         HoodMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        HoodMotorConfig.CurrentLimits.SupplyCurrentLimit = 20; //used to be 25
+        HoodMotorConfig.CurrentLimits.SupplyCurrentLimit = 40; //used to be 25
         HoodMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         HoodMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -65,12 +65,12 @@ public class Hood extends SubsystemBase{
 
     public double getHoodPosition() {
         double pos = HoodMotor.getPosition().getValueAsDouble();
-        pos = pos/5*(184.0/11.0) + 51.35; //switch to degrees, just trust, don't change
+        pos = pos/5*(184.0/11.0) + 54; //switch to degrees, just trust, don't change
         return pos; //return in degrees
     }
 
     public void setAngle(double targetDeg) {
-        targetDeg = MathUtil.clamp(targetDeg, 51.35, 78.5);
+        targetDeg = MathUtil.clamp(targetDeg, 54, 78.5);
         hoodSetpoint = targetDeg;
     }
 
@@ -80,12 +80,13 @@ public class Hood extends SubsystemBase{
     }
 
     public void hoodDownSlow() {
+        PIDEnabled = false;
         HoodMotor.setControl(homingRequest);
     }
 
     public void stop() {
         HoodMotor.setControl(new NeutralOut());
-        //System.out.println("hood motor stop() ran");
+        System.out.println("hood motor stop() ran");
         PIDEnabled = true;
     }
 
@@ -96,10 +97,10 @@ public class Hood extends SubsystemBase{
 
     public boolean atBottom() {
         boolean velocitySlow = Math.abs(HoodMotor.getVelocity().getValueAsDouble()) < 0.05;
-        //SmartDashboard.putBoolean("velocitySlow", velocitySlow);
+        SmartDashboard.putBoolean("velocitySlow", velocitySlow);
 
-        boolean currentSpiked = HoodMotor.getStatorCurrent().getValueAsDouble() > 10.0;
-        //SmartDashboard.putBoolean("currentSpiked", currentSpiked);
+        boolean currentSpiked = HoodMotor.getStatorCurrent().getValueAsDouble() > 40.0;
+        SmartDashboard.putBoolean("currentSpiked", currentSpiked);
 
         return velocitySlow && currentSpiked;
     }
@@ -108,9 +109,9 @@ public class Hood extends SubsystemBase{
     public void periodic() {
         double currentPos = getHoodPosition();
 
-        //SmartDashboard.putNumber("Hood Target", hoodSetpoint);
-        //SmartDashboard.putNumber("Hood Position", currentPos);
-        //SmartDashboard.putBoolean("Hood PID enabled", PIDEnabled);
+        SmartDashboard.putNumber("Hood Target", hoodSetpoint);
+        SmartDashboard.putNumber("Hood Position", currentPos);
+        SmartDashboard.putBoolean("Hood PID enabled", PIDEnabled);
 
         if (!PIDEnabled) return;
 

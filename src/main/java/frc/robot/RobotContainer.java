@@ -367,7 +367,7 @@ public class RobotContainer {
         m_operator.button(4).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
 
         //setpoint for testing
-        m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(52), m_hood));
+        m_operator.button(1).onTrue(new InstantCommand(() -> m_hood.setAngle(78), m_hood));
         m_operator.button(1).whileTrue(new RunCommand(() -> m_shooter.shoot(1000), m_shooter));
         m_operator.button(1).whileTrue(new RunCommand(() -> m_belt.intake(), m_belt));
         m_operator.button(1).onFalse(new InstantCommand(() -> m_shooter.off(), m_shooter));
