@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -45,10 +46,14 @@ public class PassCommand extends Command {
     private final Belt belt;
 
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
+    private final double MaxPassSpeed = 2.0;
+    private final double MaxPassAccel = 2.5;
+    private final SlewRateLimiter xLimiter = new SlewRateLimiter(MaxPassAccel);
+    private final SlewRateLimiter yLimiter = new SlewRateLimiter(MaxPassAccel);
     private final PIDController rotationPID = new PIDController(2.65, 0.0, 0.0);
 
     private final Timer shootTimer = new Timer();
+        private final Timer jamTimer = new Timer();
 
     public PassCommand(CommandSwerveDrivetrain drivetrain, Shooter shooter, Hood hood, Belt belt) {
        this.drivetrain = drivetrain;
@@ -69,6 +74,8 @@ public class PassCommand extends Command {
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
    private XboxController joystick = new XboxController(0);
+
+    boolean beltUnjamming;
 
    @Override
    public void execute() {
@@ -123,22 +130,46 @@ public class PassCommand extends Command {
         }
 
         omega = MathUtil.clamp(omega, -MaxAngularRate, MaxAngularRate);
+        double desiredX = MaxPassSpeed * -joystick.getLeftY();
+        double desiredY = MaxPassSpeed * -joystick.getLeftX();
+        Translation2d desiredVelocity = new Translation2d(desiredX, desiredY);
+        if(desiredVelocity.getNorm() > MaxPassSpeed){
+            desiredVelocity = desiredVelocity.times(MaxPassSpeed / desiredVelocity.getNorm());
 
+        }
+        double limitedX = xLimiter.calculate(desiredVelocity.getX());
+        double limitedY = yLimiter.calculate(desiredVelocity.getY());
         drivetrain.setControl(
             drive
-                .withVelocityX(MaxSpeed * -joystick.getLeftY())
-                .withVelocityY(MaxSpeed * -joystick.getLeftX())
+                .withVelocityX(limitedX)
+                .withVelocityY(limitedY)
                 .withRotationalRate(omega)
         );
 
         //SmartDashboard.putNumber("AngleErrorDeg", Units.radiansToDegrees(angleError));
         //SmartDashboard.putNumber("OmegaCmd", omega);
 
-        boolean aimed = Math.abs(angleError) < Units.degreesToRadians(15);
-        boolean spunUp = shootTimer.hasElapsed(0.2);
+        boolean aimed = Math.abs(angleError) < Units.degreesToRadians(30);
+        boolean spunUp = shootTimer.get() > 0.2;
 
-        if (spunUp && aimed) {
-            belt.intake();
+        SmartDashboard.putBoolean("passing aimed", aimed);
+        SmartDashboard.putBoolean("Passing spunup", spunUp);
+
+        if (spunUp) {
+            if (!belt.isIndexerJammed() && !beltUnjamming) {
+                belt.intake();
+                jamTimer.reset();
+            } else if (belt.isIndexerJammed()){
+                belt.jammed();
+                jamTimer.reset();
+                jamTimer.start();
+                beltUnjamming = true;
+                
+                
+            }
+            else if(jamTimer.get() > 0.4){
+                    beltUnjamming = false;
+                }
         } else {
             belt.off();
         }
@@ -168,8 +199,12 @@ public class PassCommand extends Command {
    @Override
    public void initialize() {
         rotationPID.reset();
-
+        xLimiter.reset(0);
+        yLimiter.reset(0);
         shootTimer.stop();
         shootTimer.reset();
+        shootTimer.start();
+        
+        beltUnjamming = false;
    }
 }

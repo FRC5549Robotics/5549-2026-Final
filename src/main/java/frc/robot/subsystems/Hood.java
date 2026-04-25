@@ -65,12 +65,12 @@ public class Hood extends SubsystemBase{
 
     public double getHoodPosition() {
         double pos = HoodMotor.getPosition().getValueAsDouble();
-        pos = pos/5*(184.0/11.0) + 54; //switch to degrees, just trust, don't change
+        pos = pos/5*(184.0/11.0) + 58; //switch to degrees, just trust, don't change
         return pos; //return in degrees
     }
 
     public void setAngle(double targetDeg) {
-        targetDeg = MathUtil.clamp(targetDeg, 54, 78.5);
+        targetDeg = MathUtil.clamp(targetDeg, 58, 75);
         hoodSetpoint = targetDeg;
     }
 

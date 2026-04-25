@@ -15,7 +15,7 @@ public class PassingLookup {
     public static void updateTableFromPreferences() {
         table.clear();
 
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 4; i++) {
             double dist = Preferences.getDouble("Passing_Dist_" + i, 0.0);
             double angle = Preferences.getDouble("Passing_Angle_" + i, 0.0);
             double rpm = Preferences.getDouble("Passing_RPM_" + i, 0.0);

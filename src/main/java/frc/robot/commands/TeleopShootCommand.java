@@ -59,7 +59,7 @@ public class TeleopShootCommand extends Command {
 
     private final Timer shootTimer = new Timer();
     private final Timer alignTimer = new Timer();
-
+    private final Timer jamTimer = new Timer();
     private final PIDController rotationPID = new PIDController(5, 0.0, 0.005);
 
     public TeleopShootCommand(CommandSwerveDrivetrain drivetrain, Limelight limelight, Shooter shooter, Hood hood, Belt belt, GroundIntake intake, BooleanSupplier allowAutoPivot) {
@@ -86,6 +86,8 @@ public class TeleopShootCommand extends Command {
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
    private XboxController joystick = new XboxController(0);
+
+   boolean beltUnjamming;
 
    @Override
    public void execute() {
@@ -164,9 +166,9 @@ public class TeleopShootCommand extends Command {
                    shootTimer.start();
                }
           
-               if (shootTimer.hasElapsed(0.05)) {
+               //if (shootTimer.hasElapsed(0.05)) {
                    state = State.SHOOTING;
-               }
+               //}
           
            } else {
                shootTimer.stop();
@@ -182,13 +184,32 @@ public class TeleopShootCommand extends Command {
            //}
 
 
-           if (!shooter.atSpeed()) {
-               belt.off();
-               return;
-           }
+           //if (!shooter.atSpeed()) {
+               //belt.off();
+               //return;
+           //}
 
+           //belt.intake();
 
-           belt.intake();
+            if (!belt.isIndexerJammed() && !beltUnjamming) {
+                belt.intake();
+                jamTimer.reset();
+            } else if (belt.isIndexerJammed()){
+                belt.jammed();
+                jamTimer.reset();
+                jamTimer.start();
+                beltUnjamming = true;
+                
+                
+            }
+            else if(jamTimer.get() > 0.4){
+                    beltUnjamming = false;
+                }
+
+    
+
+            
+           
 
 
            //if (shootTimer.hasElapsed(2.5)) { //delay before the intake goes up and down
@@ -233,5 +254,6 @@ public class TeleopShootCommand extends Command {
         alignTimer.reset();
 
         rotationPID.reset();
+        beltUnjamming = false;
    }
 }

@@ -47,8 +47,9 @@ public class Shooter extends SubsystemBase {
 
   private boolean shooterEnabled = false;
   private double targetRPM = 0.0;
+  private double currentRPMFiltered = 0.0;
 
-  private final LinearFilter rpmFilter = LinearFilter.movingAverage(8);
+  private final LinearFilter rpmFilter = LinearFilter.movingAverage(5);
 
   public Shooter() { //shooter constructor
     TalonFXConfiguration cfg = new TalonFXConfiguration();
@@ -101,30 +102,17 @@ public class Shooter extends SubsystemBase {
   }
 
   public boolean atSpeed() {
-    double currentRPM = left.getVelocity().getValueAsDouble() * 60;
-    double currentRPMFiltered = rpmFilter.calculate(currentRPM);
-    if (targetRPM == 0.0) {
+    if (targetRPM <= 0.0) {
       return false;
     }
-    //System.out.println(Math.abs(currentRPMFiltered - targetRPM));
-    return Math.abs(currentRPMFiltered - targetRPM) < 50; //Is flywheel rpm within tolerance?
-  }
-
-    public boolean atSpeedPassing() {
-    double currentRPM = left.getVelocity().getValueAsDouble() * 60;
-    double currentRPMFiltered = rpmFilter.calculate(currentRPM);
-    if (targetRPM == 0.0) {
-      return false;
-    }
-    //System.out.println(Math.abs(currentRPMFiltered - targetRPM));
-    return Math.abs(currentRPMFiltered - targetRPM) < 200; //Is flywheel rpm within tolerance?
+    return currentRPMFiltered >= targetRPM -25; //Is flywheel rpm spunip?
   }
 
   @Override
   public void periodic() {
     double leftRPS = left.getVelocity().getValueAsDouble();     // motor rotations/sec
     double leftRPM = leftRPS * 60.0;
-    double rpmFiltered = rpmFilter.calculate(leftRPM);
+    currentRPMFiltered = rpmFilter.calculate(leftRPM);
     double targetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(targetRPM);     // Feedforward usually wants rad/s. Convert motor RPS -> rad/s
     double targetRPS = targetRPM / 60.0; // Convert target RPM -> target RPS (Phoenix 6 uses RPS)
     double ffVolts = ff.calculate(targetRPS);
@@ -135,7 +123,7 @@ public class Shooter extends SubsystemBase {
     //SmartDashboard.putNumber("RPS", leftRPS);
     //SmartDashboard.putNumber("Shooter Volts", shooterVolts);
     //SmartDashboard.putNumber("Shooter FF Volts", ffVolts);
-    SmartDashboard.putNumber("Shooter RPM Filtered", rpmFiltered);
+    SmartDashboard.putNumber("Shooter RPM Filtered", currentRPMFiltered);
     //SmartDashboard.putNumber("Shooter Left Motor Current", left.getSupplyCurrent().getValueAsDouble());
               
     // Command velocity with arbitrary feedforward voltage

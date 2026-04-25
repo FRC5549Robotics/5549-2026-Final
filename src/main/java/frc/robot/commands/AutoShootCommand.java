@@ -48,8 +48,7 @@ public class AutoShootCommand extends Command {
 
     private State state = State.ALIGNING;
     private final Timer shootTimer = new Timer();
-
-    private final Timer alignTimer = new Timer();
+    private final Timer jamTimer = new Timer();
 
     boolean waitingForPipeline = false;
 
@@ -76,7 +75,7 @@ public class AutoShootCommand extends Command {
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
    private XboxController joystick = new XboxController(0);
-
+    boolean beltUnjamming;
     @Override
     public void execute() {
 
@@ -152,9 +151,9 @@ public class AutoShootCommand extends Command {
                    shootTimer.start();
                }
           
-               if (shootTimer.hasElapsed(0.05)) {
+               //if (shootTimer.hasElapsed(0.05)) {
                    state = State.SHOOTING;
-               }
+               //}
           
            } else {
                shootTimer.stop();
@@ -163,12 +162,26 @@ public class AutoShootCommand extends Command {
            return;
            }
         if (state == State.SHOOTING) {
-           if (!shooter.atSpeed()) {
-               belt.off();
-               return;
-           }
+           //if (!shooter.atSpeed()) {
+               //belt.off();
+               //return;
+           //}
 
-           belt.intake();
+           
+            if (!belt.isIndexerJammed() && !beltUnjamming) {
+                belt.intake();
+                jamTimer.reset();
+            } else if (belt.isIndexerJammed()){
+                belt.jammed();
+                jamTimer.reset();
+                jamTimer.start();
+                beltUnjamming = true;
+                
+                
+            }
+            else if(jamTimer.get() > 0.4){
+                    beltUnjamming = false;
+                }
 
             if (shootTimer.hasElapsed(3.5)) {
                 intake.shooting();
@@ -203,12 +216,7 @@ public class AutoShootCommand extends Command {
        shootTimer.stop();
        shootTimer.reset();
 
-       second = false;
-       waitingForPipeline = false;
-
-       alignTimer.stop();
-        alignTimer.reset();
-
         rotationPID.reset();
+        beltUnjamming = false;
    }
 }

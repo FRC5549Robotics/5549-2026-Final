@@ -6,6 +6,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -71,8 +72,29 @@ public class Belt extends SubsystemBase{
         belt_right.setControl(velocityRequest.withVelocity(0)); //turn off belts
     }
 
+    private final Timer jamTimer = new Timer();
+    public boolean isIndexerJammed() {
+        SmartDashboard.putNumber("jam timer", jamTimer.get());
+        //SmartDashboard.putNumber("belt current", belt_right.getStatorCurrent().getValueAsDouble());
+        if (belt_right.getStatorCurrent().getValueAsDouble() > 70) {
+            if (jamTimer.get() > 0.25) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } 
+        else {
+            jamTimer.reset();
+            jamTimer.start();
+            return false;
+        }
+    }
+
     @Override
     public void periodic() {
         //SmartDashboard.putNumber("Belt RPM", belt_left.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("belt current", belt_right.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putBoolean("belt jammed?", isIndexerJammed());
     }    
 }
